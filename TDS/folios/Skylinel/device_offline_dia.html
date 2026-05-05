@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Slowness Troubleshooting Guide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            color: #333;
+            line-height: 1.6;
+            padding-top: 120px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            color: #666;
+        }
+
+        /* Sticky Progress Bar */
+        .progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+            padding: 15px 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-around;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+            min-width: max-content;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 0 10px;
+            min-width: 120px;
+        }
+
+        .progress-step:hover {
+            transform: translateY(-2px);
+        }
+
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #666;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2em;
+            margin-bottom: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active .step-circle {
+            background: #e26e00;
+            color: white;
+            box-shadow: 0 4px 12px rgba(226, 110, 0, 0.4);
+        }
+
+        .step-title {
+            font-size: 0.85em;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .step-time {
+            font-size: 0.75em;
+            color: #999;
+        }
+
+        .progress-step.active .step-title {
+            color: #e26e00;
+            font-weight: 600;
+        }
+
+        /* Mobile Progress Bar */
+        @media (max-width: 575px) {
+            .progress-steps {
+                justify-content: flex-start;
+                padding: 0 10px;
+            }
+
+            .progress-step {
+                min-width: 50px;
+                padding: 0 8px;
+                position: relative;
+            }
+
+            .step-circle {
+                width: 40px;
+                height: 40px;
+                font-size: 1em;
+            }
+
+            .step-title,
+            .step-time {
+                display: none;
+            }
+
+            .progress-step::before {
+                content: attr(data-title);
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0,0,0,0.85);
+                color: white;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 0.8em;
+                white-space: nowrap;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease;
+                margin-bottom: 8px;
+                z-index: 1001;
+            }
+
+            .progress-step:hover::before {
+                opacity: 1;
+            }
+        }
+
+        /* New Tab Button */
+        .new-tab-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(226, 110, 0, 0.6);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            z-index: 1001;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .new-tab-button:hover {
+            background: rgba(226, 110, 0, 0.8);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .new-tab-button.scrolled {
+            padding: 10px 12px;
+        }
+
+        .new-tab-text {
+            display: inline;
+        }
+
+        .new-tab-icon {
+            display: none;
+        }
+
+        .new-tab-button.scrolled .new-tab-text {
+            display: none;
+        }
+
+        .new-tab-button.scrolled .new-tab-icon {
+            display: inline;
+        }
+
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: fixed;
+            right: 30px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 999;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+
+        .scroll-indicator:hover {
+            opacity: 1;
+        }
+
+        .scroll-arrow {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e26e00;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.2em;
+        }
+
+        .scroll-arrow:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(226, 110, 0, 0.4);
+        }
+
+        .scroll-text {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-size: 0.8em;
+            font-weight: 600;
+            color: #e26e00;
+            letter-spacing: 2px;
+        }
+
+        /* Step Section */
+        .step-section {
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+            scroll-margin-top: 90px;
+        }
+
+        .step-header {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: white;
+            color: #2d3748;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.3em;
+            flex-shrink: 0;
+        }
+
+        .step-header-content {
+            flex: 1;
+        }
+
+        .step-header h2 {
+            font-size: 1.6em;
+            margin-bottom: 5px;
+        }
+
+        .step-time-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .step-content {
+            padding: 30px;
+        }
+
+        .instructions-box {
+            background: #f7fafc;
+            border-left: 4px solid #e26e00;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .instructions-box h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .instructions-box ol, .instructions-box ul {
+            margin-left: 20px;
+        }
+
+        .instructions-box li {
+            margin-bottom: 10px;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-block;
+            background: #cbd5e0;
+            color: #2d3748;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: 500;
+            margin: 0 2px;
+        }
+
+        /* Info Boxes */
+        .info-box {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .info-box h4 {
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+        }
+
+        .info-box li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .info-box.critical {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+        }
+
+        .info-box.warning {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+        }
+
+        .info-box.info {
+            background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+        }
+
+        /* Navigation Path Box */
+        .nav-path-box {
+            background: #edf2f7;
+            border-left: 4px solid #4299e1;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .nav-path-box strong {
+            color: #2c5282;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .nav-path-box p {
+            color: #2d3748;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            margin-bottom: 5px;
+        }
+
+        /* Overview Box */
+        .overview-box {
+            background: #e0e0e0;
+            color: #2d3748;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+        }
+
+        .overview-box h3 {
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            color: #2d3748;
+        }
+
+        .overview-box p {
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+
+        .overview-box ul {
+            margin-left: 20px;
+        }
+
+        .overview-box li {
+            margin-bottom: 8px;
+        }
+
+        /* Impact Categories */
+        .impact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .impact-card {
+            background: white;
+            border-left: 4px solid #e26e00;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .impact-card h4 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+
+        .impact-card p {
+            color: #4a5568;
+            font-size: 0.9em;
+        }
+
+        /* Restricted Content Styles */
+        .restricted-content {
+            position: relative;
+        }
+
+        .restricted-content::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 300px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 50%, rgba(255,255,255,1) 100%);
+            pointer-events: none;
+        }
+
+        .restricted-message {
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: white;
+            border-radius: 12px;
+            padding: 50px 40px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin: 40px auto;
+            max-width: 700px;
+            position: relative;
+            z-index: 10;
+        }
+
+        .restricted-message h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #e26e00;
+        }
+
+        .restricted-message p {
+            font-size: 1.2em;
+            line-height: 1.8;
+            margin-bottom: 15px;
+        }
+
+        .restricted-message .contact-text {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid rgba(226, 110, 0, 0.3);
+        }
+
+        /* Summary Section */
+        .summary-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-top: 40px;
+        }
+
+        .summary-section h2 {
+            color: #2d3748;
+            margin-bottom: 25px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .summary-card {
+            background: #f7fafc;
+            border-left: 4px solid #e26e00;
+            padding: 20px;
+            border-radius: 8px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+        }
+
+        .summary-card h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .summary-card p {
+            color: #4a5568;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .next-steps-box {
+            background: linear-gradient(135deg, #e26e00 0%, #c55a00 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .next-steps-box h3 {
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .next-steps-box ul {
+            margin-left: 20px;
+        }
+
+        .next-steps-box li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .header h1 {
+                font-size: 1.6em;
+            }
+
+            .header p {
+                font-size: 1em;
+            }
+
+            .step-header {
+                padding: 20px;
+            }
+
+            .step-header h2 {
+                font-size: 1.3em;
+            }
+
+            .step-content {
+                padding: 20px;
+            }
+
+            .scroll-indicator {
+                right: 15px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .restricted-message {
+                padding: 30px 20px;
+            }
+
+            .restricted-message h2 {
+                font-size: 1.5em;
+            }
+
+            .restricted-message p {
+                font-size: 1em;
+            }
+        }
+
+        /* Code blocks */
+        code {
+            background: #2d3748;
+            color: #68d391;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+        <div class="progress-steps">
+            <div class="progress-step" data-step="1" data-title="Client Identification" onclick="scrollToStep(1)">
+                <div class="step-circle">1</div>
+                <div class="step-title">Client Identification</div>
+                <div class="step-time">3-5 min</div>
+            </div>
+            <div class="progress-step" data-step="2" data-title="Network 360" onclick="scrollToStep(2)">
+                <div class="step-circle">2</div>
+                <div class="step-title">Network 360</div>
+                <div class="step-time">5-8 min</div>
+            </div>
+            <div class="progress-step" data-step="3" data-title="Signal Quality" onclick="scrollToStep(3)">
+                <div class="step-circle">3</div>
+                <div class="step-title">Signal Quality</div>
+                <div class="step-time">4-6 min</div>
+            </div>
+            <div class="progress-step" data-step="4" data-title="Application Performance" onclick="scrollToStep(4)">
+                <div class="step-circle">4</div>
+                <div class="step-title">Application Performance</div>
+                <div class="step-time">5-7 min</div>
+            </div>
+            <div class="progress-step" data-step="5" data-title="Trend Analysis" onclick="scrollToStep(5)">
+                <div class="step-circle">5</div>
+                <div class="step-title">Trend Analysis</div>
+                <div class="step-time">3-5 min</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Tab Button -->
+    <button class="new-tab-button" onclick="openInNewTab()">
+        <span class="new-tab-text">New Tab ↗</span>
+        <span class="new-tab-icon">↗</span>
+    </button>
+
+    <!-- Scroll Indicator -->
+    <div class="scroll-indicator">
+        <div class="scroll-arrow" onclick="scrollToTop()">↑</div>
+        <div class="scroll-text">SCROLL</div>
+        <div class="scroll-arrow" onclick="scrollToBottom()">↓</div>
+    </div>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Client Slowness Troubleshooting Guide</h1>
+            <p>Systematic diagnosis for wireless and network client performance issues</p>
+        </div>
+
+        <!-- Overview -->
+        <div class="overview-box">
+            <h3>Issue Overview</h3>
+            <p>Client performance issues represent one of the most common and user-impacting network problems. These issues can stem from wireless interference, network congestion, device-specific problems, or application-related bottlenecks. Systematic diagnosis is essential to identify root causes and implement effective solutions.</p>
+            <h4 style="margin-top: 15px; margin-bottom: 10px;">Common Symptoms:</h4>
+            <ul>
+                <li>User complaints of slow application response times</li>
+                <li>Increased latency or packet loss for specific clients</li>
+                <li>Poor wireless signal quality or frequent disconnections</li>
+                <li>Application timeouts or connection failures</li>
+                <li>Degraded video or voice quality for real-time applications</li>
+            </ul>
+        </div>
+
+        <!-- Impact Categories -->
+        <h3 style="color: #2d3748; margin-bottom: 20px; font-size: 1.5em;">Issue Priority</h3>
+        <div class="impact-grid">
+            <div class="impact-card">
+                <h4>Individual Client</h4>
+                <p>Single user impact, standard troubleshooting priority</p>
+            </div>
+            <div class="impact-card">
+                <h4>Multiple Clients (Same Location)</h4>
+                <p>Potential infrastructure issue, elevated priority</p>
+            </div>
+            <div class="impact-card">
+                <h4>Multiple Clients (Different Locations)</h4>
+                <p>Possible network-wide issue, high priority</p>
+            </div>
+            <div class="impact-card">
+                <h4>Business-Critical Applications</h4>
+                <p>Immediate response required regardless of scope</p>
+            </div>
+        </div>
+
+        <!-- Navigation Paths -->
+        <div class="nav-path-box">
+            <strong>🔧 Primary Tools: Client 360 + Network 360 + Applications</strong>
+            <p>Client 360: Assurance > Health > Client > [Search Client] > Client 360</p>
+            <p>Network 360: Assurance > Health > Network</p>
+            <p>Applications: Assurance > Health > Applications</p>
+        </div>
+
+        <div class="info-box info">
+            <h4>💡 Key Diagnostic Capabilities</h4>
+            <p style="margin-bottom: 12px;">Depending on the number of affected clients, one or all of these dashboards will aid in first determining the scope of the issue, and then determining the root cause. For example, if a single client is challenged by application performance, using the Client 360 information correlated with Application performance will be the set of tools to use. If however there are multiple clients experiencing WiFi issues, using the drill down analysis from the Network 360 will be the path.</p>
+            <ul>
+                <li><strong>Connection Quality Analysis:</strong> Signal strength, data rates, roaming behavior</li>
+                <li><strong>Application Performance Metrics:</strong> Response times, throughput, packet loss</li>
+                <li><strong>Network Path Visualization:</strong> End-to-end connectivity analysis</li>
+                <li><strong>Wireless Environment Assessment:</strong> Channel utilization, interference analysis</li>
+                <li><strong>Historical Trend Analysis:</strong> Performance patterns and baseline comparisons</li>
+            </ul>
+        </div>
+
+        <!-- Step 1 -->
+        <div class="step-section" id="step-1">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-header-content">
+                    <h2>Client Identification and Assessment</h2>
+                    <span class="step-time-badge">⏱ 3-5 minutes</span>
+                </div>
+            </div>
+            <div class="step-content">
+                <div class="instructions-box">
+                    <h3>Finding the Problem Client:</h3>
+                    <ol>
+                        <li>Navigate to <span class="badge">Assurance</span> > <span class="badge">Health</span> > <span class="badge">Client</span></li>
+                        <li>Use the search bar to find the specific client (by <span class="badge">MAC</span>, <span class="badge">IP</span>, or <span class="badge">username</span>)</li>
+                        <li>Click on the client to open <span class="badge">Client 360</span></li>
+                        <li>Check the four main categories at the top of Client 360</li>
+                    </ol>
+                </div>
+
+                <div class="info-box info">
+                    <h4>💡 Client 360 Main Categories</h4>
+                    <ul>
+                        <li><strong>Client Details:</strong> Everything about the client</li>
+                        <li><strong>Summary:</strong> Onboarding, Roaming, Connectivity</li>
+                        <li><strong>Issues:</strong> Any detected issues with the client or the ecosystem</li>
+                        <li><strong>Onboarding:</strong> IP Address assignment, physical topology of connected client</li>
+                    </ul>
+                </div>
+
+                <div class="info-box warning">
+                    <h4>⚡ Health Score Interpretation</h4>
+                    <ul>
+                        <li><strong>8-10 (Green):</strong> Good performance with only minor issues</li>
+                        <li><strong>4-7 (Orange):</strong> Performance requiring attention</li>
+                        <li><strong>1-3 (Red):</strong> Critical issues requiring immediate action</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step-section restricted-content" id="step-2">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-header-content">
+                    <h2>Network 360 Analysis</h2>
+                    <span class="step-time-badge">⏱ 5-8 minutes</span>
+                </div>
+            </div>
+            <div class="step-content">
+                <div class="instructions-box">
+                    <h3>Network-Wide Assessment:</h3>
+                    <ol>
+                        <li>Navigate to <span class="badge">Assurance</span> > <span class="badge">Health</span> > <span class="badge">Network</span></li>
+                        <li>Depending on the location of the issue (one site, multiple sites, wired or wirelessly connected clients), use the <span class="badge">filtering ability</span> for location, time, or network element(s) that are performing poorly</li>
+                        <li>Check the colors for each family of network element</li>
+                        <li>Choose a network element to drill deeper into the analysis</li>
+                    </ol>
+                </div>
+
+                <div class="instructions-box">
+                    <h3>Access Point Analysis:</h3>
+                    <ol>
+                        <li>From <span class="badge">Client 360</span>, note which <span class="badge">Access Point</span> the client is connected to</li>
+                        <li>Navigate to <span class="badge">Assurance</span> > <span class="badge">Health</span> > <span class="badge">Network</span></li>
+                        <li>Search for and click on that Access Point</li>
+                        <li>In AP's Device 360, check key metrics</li>
+                    </ol>
+                </div>
+
+                <div class="info-box critical">
+                    <h4>⚠ Critical AP Metrics</h4>
+                    <ul>
+                        <li><strong>Client Count:</strong> High numbers (30+) can cause slowness</li>
+                        <li><strong>Radio Utilization:</strong> Above 50% indicates congestion</li>
+                        <li><strong>Interface Utilization:</strong> High utilization on wired backhaul</li>
+                    </ul>
+                </div>
+
+                <div class="info-box warning">
+                    <h4>⚡ Network Element Health Scores</h4>
+                    <ul>
+                        <li><strong>8-10 (Green):</strong> Good performance with only minor issues</li>
+                        <li><strong>4-7 (Orange):</strong> Performance requiring attention</li>
+                        <li><strong>1-3 (Red):</strong> Critical issues requiring immediate action</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Restricted Message -->
+        <div class="restricted-message">
+            <h2>🔒 Premium Content</h2>
+            <p>You've reached the end of the preview content.</p>
+            <p>The complete troubleshooting guide includes additional diagnostic steps for:</p>
+            <p><strong>• Signal Quality Assessment<br>
+            • Application Performance Analysis<br>
+            • Historical Trend Analysis<br>
+            • Complete Resolution Strategy</strong></p>
+            <p class="contact-text">To view the complete Folio contact your account manager</p>
+        </div>
+    </div>
+
+    <script>
+        // Intersection Observer for progress tracking
+        let isManualNavigation = false;
+        let manualNavigationTimeout = null;
+        let scrollTimeout = null;
+
+        const observerOptions = {
+            root: null,
+            rootMargin: '-20% 0px -50% 0px',
+            threshold: [0, 0.25, 0.5, 0.75, 1]
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            if (isManualNavigation) return;
+
+            // Debounce the scroll detection
+            clearTimeout(scrollTimeout);
+            scrollTimeout = setTimeout(() => {
+                let maxVisibility = 0;
+                let mostVisibleStep = null;
+
+                // Check all sections to find the most visible one
+                document.querySelectorAll('.step-section').forEach(section => {
+                    const rect = section.getBoundingClientRect();
+                    const viewportHeight = window.innerHeight;
+                    
+                    // Calculate how much of the section is visible
+                    const visibleTop = Math.max(0, rect.top);
+                    const visibleBottom = Math.min(viewportHeight, rect.bottom);
+                    const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+                    
+                    // Calculate visibility ratio
+                    const visibilityRatio = visibleHeight / viewportHeight;
+                    
+                    if (visibilityRatio > maxVisibility && rect.top < viewportHeight * 0.5) {
+                        maxVisibility = visibilityRatio;
+                        mostVisibleStep = section.id.split('-')[1];
+                    }
+                });
+
+                if (mostVisibleStep) {
+                    updateProgressBar(mostVisibleStep);
+                }
+            }, 100);
+        }, observerOptions);
+
+        // Observe all step sections
+        document.querySelectorAll('.step-section').forEach(section => {
+            observer.observe(section);
+        });
+
+        function updateProgressBar(stepNumber) {
+            document.querySelectorAll('.progress-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            const activeStep = document.querySelector(`.progress-step[data-step="${stepNumber}"]`);
+            if (activeStep) {
+                activeStep.classList.add('active');
+            }
+        }
+
+        function scrollToStep(stepNumber) {
+            // Limit navigation to steps 1 and 2 only
+            if (stepNumber > 2) {
+                return;
+            }
+            
+            isManualNavigation = true;
+            
+            clearTimeout(manualNavigationTimeout);
+            
+            const stepElement = document.getElementById(`step-${stepNumber}`);
+            if (stepElement) {
+                stepElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                updateProgressBar(stepNumber);
+            }
+            
+            manualNavigationTimeout = setTimeout(() => {
+                isManualNavigation = false;
+            }, 1500);
+        }
+
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function scrollToBottom() {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        function openInNewTab() {
+            window.open(window.location.href, '_blank');
+        }
+
+        // New tab button scroll behavior
+        let lastScrollTop = 0;
+        window.addEventListener('scroll', () => {
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const newTabButton = document.querySelector('.new-tab-button');
+            
+            if (scrollTop > 100) {
+                newTabButton.classList.add('scrolled');
+            } else {
+                newTabButton.classList.remove('scrolled');
+            }
+            
+            lastScrollTop = scrollTop;
+        });
+
+        // Initialize first step as active
+        updateProgressBar(1);
+    </script>
+</body>
+</html>
