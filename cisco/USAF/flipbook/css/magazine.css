@@ -671,7 +671,7 @@ button {
 .control-bottom {
     position: absolute;
     left: 5%;
-    bottom: -31px;
+    bottom: -49px;
     width: 90%;
     z-index: 800;
 }
@@ -1240,7 +1240,8 @@ button {
     height: 100%;
     object-fit: cover;
     outline: none;
-    pointer-events: none;    
+    pointer-events: none;   
+    display: block;
 }
 
 .layer-aud,
@@ -1497,6 +1498,48 @@ iframe.layer-vid {
 }
 
 .round-pages.magazine-viewport.page-single .magazine[dir] .hard-page-wrapper > :last-child {
+    border-radius: var(--fborder) 0 0 var(--fborder);
+}
+
+/* hard cover/back: spine-side corners must stay square */
+.round-pages.magazine-viewport .hard-page-wrapper[page="1"] > :first-child > :last-child {
+    border-radius: 0 var(--fborder) var(--fborder) 0;
+}
+
+.round-pages.magazine-viewport .hard-page-wrapper > :first-child > .page-last {
+    border-radius: var(--fborder) 0 0 var(--fborder);
+}
+
+.round-pages.magazine-viewport .magazine[dir] .hard-page-wrapper[page="1"] > :first-child > :last-child {
+    border-radius: var(--fborder) 0 0 var(--fborder);
+}
+
+.round-pages.magazine-viewport .magazine[dir] .hard-page-wrapper > :first-child > .page-last {
+    border-radius: 0 var(--fborder) var(--fborder) 0;
+}
+
+/* inside of hard covers: follow even/odd pattern like inner pages */
+.round-pages.magazine-viewport .hard-page-wrapper[page="2"] > :first-child > :last-child {
+    border-radius: var(--fborder) 0 0 var(--fborder);
+}
+
+.round-pages.magazine-viewport .hard-page-wrapper > :first-child > .page-second-last.even {
+    border-radius: var(--fborder) 0 0 var(--fborder);
+}
+
+.round-pages.magazine-viewport .hard-page-wrapper > :first-child > .page-second-last.odd {
+    border-radius: 0 var(--fborder) var(--fborder) 0;
+}
+
+.round-pages.magazine-viewport .magazine[dir] .hard-page-wrapper[page="2"] > :first-child > :last-child {
+    border-radius: 0 var(--fborder) var(--fborder) 0;
+}
+
+.round-pages.magazine-viewport .magazine[dir] .hard-page-wrapper > :first-child > .page-second-last.even {
+    border-radius: 0 var(--fborder) var(--fborder) 0;
+}
+
+.round-pages.magazine-viewport .magazine[dir] .hard-page-wrapper > :first-child > .page-second-last.odd {
     border-radius: var(--fborder) 0 0 var(--fborder);
 }
 
@@ -2354,6 +2397,9 @@ input[type=range].page-bar-range {
     background-color: transparent;
     -webkit-appearance: none;
     height: 8px;
+    padding: 15px 0;
+    box-sizing: content-box;
+    touch-action: none;
 }
 input[type=range].page-bar-range:focus {
   outline: none;
@@ -2440,7 +2486,7 @@ input[type=range].page-bar-range:focus::-ms-fill-upper {
 .slider-horizontal,
 .slider-vertical {
     position: relative;
-    margin-top: -10px;
+    margin-top: -25px;
 }
 
 .slider-vertical .control-bottom {
@@ -2489,7 +2535,7 @@ input[type=range].page-bar-range:focus::-ms-fill-upper {
 }
 
 .slider-horizontal .control-bottom {
-    bottom: -9px;
+    bottom: -32px;
     left: 0;
 }
 

@@ -119,7 +119,7 @@
 }
 .layer-player .play-show {
     color: white;
-    width: auto;
+    width: 94%;
     height: 100%;
     left: 0;
     position: relative;
@@ -127,7 +127,7 @@
 }
 .layer-player .pause-show {
     color: white;
-    width: auto;
+    width: 94%;
     height: 100%;
     left: 0;
     margin: 0 auto;
