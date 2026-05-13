@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir /s \"C:\\\\Users\\\\dbate\\\\Dropbox\\\\Development\\\\TD Synnex\\\\OT Network Assesment\\\\Lab\\\\Lab 1a\\\\HTML5\")",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\Users\\\\dbate\\\\Dropbox\\\\Development\\\\TD Synnex\\\\OT Network Assesment\\\\Lab\\\\Lab 1a\\\\HTML5\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName -replace [regex]::Escape\\(\"C:\\\\Users\\\\dbate\\\\Dropbox\\\\Development\\\\TD Synnex\\\\OT Network Assesment\\\\Lab\\\\Lab 1a\\\\HTML5\"\\), \"\" })",
+      "Bash(npx --version)",
+      "Bash(mkdir -p \".claude\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(python -c ' *)",
+      "Bash(pip install *)",
+      "Bash(ls \"C:\\\\Users\\\\dbate\\\\Dropbox\\\\Development\\\\TD Synnex\\\\OT Network Assesment\\\\Lab\\\\Lab 1a\\\\HTML5\"/*.docx)",
+      "Bash(dir /b \"C:\\\\Users\\\\dbate\\\\Dropbox\\\\Development\\\\TD Synnex\\\\OT Network Assesment\\\\Lab\\\\Lab 1a\\\\HTML5\\\\*.docx\")"
+    ]
+  }
+}
