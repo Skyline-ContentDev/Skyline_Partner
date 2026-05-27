@@ -9,7 +9,11 @@
       "Bash(python -c ' *)",
       "Bash(pip install *)",
       "Bash(ls \"C:\\\\Users\\\\dbate\\\\Dropbox\\\\Development\\\\TD Synnex\\\\OT Network Assesment\\\\Lab\\\\Lab 1a\\\\HTML5\"/*.docx)",
-      "Bash(dir /b \"C:\\\\Users\\\\dbate\\\\Dropbox\\\\Development\\\\TD Synnex\\\\OT Network Assesment\\\\Lab\\\\Lab 1a\\\\HTML5\\\\*.docx\")"
+      "Bash(dir /b \"C:\\\\Users\\\\dbate\\\\Dropbox\\\\Development\\\\TD Synnex\\\\OT Network Assesment\\\\Lab\\\\Lab 1a\\\\HTML5\\\\*.docx\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\dbate\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\73dd7ff3-4e3e-4b51-9269-8ede41a2f55b\\\\d43bd20f-39fa-4de8-9f7f-15e7aaf6ac29\\\\skills\\\\lab-step-navigator\\\\scripts\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\dbate\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\73dd7ff3-4e3e-4b51-9269-8ede41a2f55b\\\\d43bd20f-39fa-4de8-9f7f-15e7aaf6ac29\\\\skills\\\\lab-step-navigator\\\\assets\")",
+      "Bash(Get-ChildItem -Recurse \"C:\\\\Users\\\\dbate\\\\AppData\\\\Roaming\\\\Claude\\\\local-agent-mode-sessions\\\\skills-plugin\\\\73dd7ff3-4e3e-4b51-9269-8ede41a2f55b\\\\d43bd20f-39fa-4de8-9f7f-15e7aaf6ac29\\\\skills\\\\lab-step-navigator\")",
+      "Bash(Select-Object FullName, Length)"
     ]
   }
 }

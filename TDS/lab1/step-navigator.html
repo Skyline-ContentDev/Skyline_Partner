@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab 1a – Step Navigator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #lab-frame {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  /* ── Show tab (when bar is hidden) ── */
+  #show-tab {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    background: rgba(13, 13, 32, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid #00bceb;
+    border-radius: 8px;
+    color: #00bceb;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    cursor: pointer;
+    z-index: 1000;
+    display: none;
+    user-select: none;
+  }
+  #show-tab:hover { background: rgba(0,188,235,0.15); }
+
+  /* ── Card ── */
+  #bar {
+    position: fixed;
+    bottom: 16px;
+    left: 16px;
+    width: 20vw;
+    min-width: 200px;
+    max-width: 320px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    border: 1.5px solid rgba(0,188,235,0.6);
+    overflow: hidden;
+    z-index: 999;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,188,235,0.1);
+    cursor: grab;
+    user-select: none;
+  }
+  #bar:active { cursor: grabbing; }
+  #bar.is-dragging { transition: none; }
+
+  /* Progress line along top */
+  #bar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    height: 2px;
+    width: var(--progress, 0%);
+    background: linear-gradient(90deg, #00bceb, #00e5c0);
+    transition: width 0.3s;
+    z-index: 1;
+    border-radius: 12px 0 0 0;
+  }
+
+  /* ── Title row ── */
+  #bar-title-row {
+    background: rgba(13, 13, 32, 0.92);
+    padding: 10px 14px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(0,188,235,0.15);
+  }
+
+  #bar-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #00bceb;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .icon-btn {
+    background: none;
+    border: none;
+    color: #6a7090;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    padding: 0 0 0 8px;
+    transition: color 0.15s;
+    flex-shrink: 0;
+  }
+  .icon-btn:hover { color: #fff; }
+
+  /* ── Step counter row ── */
+  #bar-counter-row {
+    background: rgba(13, 13, 32, 0.92);
+    padding: 2px 14px 10px;
+  }
+
+  #step-counter {
+    font-size: 11px;
+    color: #6a7090;
+  }
+
+  /* ── Step text ── */
+  #bar-content {
+    background: rgba(10, 10, 30, 0.82);
+    padding: 12px 14px;
+  }
+
+  #step-display {
+    font-size: 13px;
+    line-height: 1.55;
+    color: #ffffff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  }
+
+  #step-display strong {
+    color: #00bceb;
+    font-weight: 600;
+  }
+
+  #step-display.fade {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  #step-display.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  /* ── Nav row ── */
+  #bar-nav {
+    background: rgba(13, 13, 32, 0.92);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid rgba(0,188,235,0.15);
+  }
+
+  .nav-btn {
+    flex: 1;
+    background: rgba(30, 30, 64, 0.8);
+    border: 1px solid #2a2a50;
+    color: #c0c0d8;
+    border-radius: 7px;
+    padding: 7px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .nav-btn:hover:not(:disabled) {
+    background: #00bceb;
+    color: #fff;
+    border-color: #00bceb;
+  }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+  #btn-complete {
+    flex: 1;
+    background: rgba(26, 122, 80, 0.8);
+    border-color: #1a7a50;
+    color: #fff;
+    display: none;
+  }
+  #btn-complete:hover { background: #22a06b; border-color: #22a06b; }
+
+  /* ── Border glow pulse ── */
+  @keyframes glowPulse {
+    0%   { box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,188,235,0.1); border-color: rgba(0,188,235,0.6); }
+    16%  { box-shadow: 0 0 28px 8px rgba(0,188,235,0.85), 0 0 0 2px rgba(0,188,235,1); border-color: rgba(0,188,235,1); }
+    33%  { box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,188,235,0.1); border-color: rgba(0,188,235,0.6); }
+    50%  { box-shadow: 0 0 28px 8px rgba(0,188,235,0.85), 0 0 0 2px rgba(0,188,235,1); border-color: rgba(0,188,235,1); }
+    66%  { box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,188,235,0.1); border-color: rgba(0,188,235,0.6); }
+    83%  { box-shadow: 0 0 28px 8px rgba(0,188,235,0.85), 0 0 0 2px rgba(0,188,235,1); border-color: rgba(0,188,235,1); }
+    100% { box-shadow: 0 0 28px 8px rgba(0,188,235,0.85), 0 0 0 2px rgba(0,188,235,1); border-color: rgba(0,188,235,1); }
+  }
+  #bar.glow { animation: glowPulse 2.4s ease-in-out; }
+  #bar.steady-glow {
+    box-shadow: 0 0 28px 8px rgba(0,188,235,0.85), 0 0 0 2px rgba(0,188,235,1);
+    border-color: rgba(0,188,235,1);
+  }
+
+  /* ── Completion state ── */
+  #bar.complete #bar-content { background: rgba(255, 255, 255, 0.95); }
+  #step-display.complete-msg { color: #1a7a50; font-weight: 600; text-shadow: none; }
+</style>
+</head>
+<body>
+
+<iframe id="lab-frame" src="practice.html"></iframe>
+
+<div id="show-tab" onclick="showBar()">Lab Steps</div>
+
+<div id="bar">
+  <div id="bar-title-row">
+    <span id="bar-title">Lab Steps</span>
+    <button class="icon-btn" title="Hide" onclick="hideBar(event)">&#8211;</button>
+  </div>
+
+  <div id="bar-counter-row">
+    <span id="step-counter">Step 1 of 11</span>
+  </div>
+
+  <div id="bar-content">
+    <div id="step-display" class="visible"></div>
+  </div>
+
+  <div id="bar-nav">
+    <button class="nav-btn" id="btn-prev" onclick="prevStep(event)" disabled>&#8592; Prev</button>
+    <button class="nav-btn" id="btn-next" onclick="nextStep(event)">Next &#8594;</button>
+    <button class="nav-btn" id="btn-complete" onclick="completeAll(event)">&#10003; Done</button>
+  </div>
+</div>
+
+<script>
+const STEPS = [
+  { num: 1,  text: "Below the Welcome message, click <strong>Security overview</strong>." },
+  { num: 2,  text: "Now click <strong>Operational overview</strong>. Compare the two dashboards." },
+  { num: 3,  text: "From the navigation drop-down at the top center, choose <strong>Explore</strong>." },
+  { num: 4,  text: "Select the <strong>All data</strong> preset, then click <strong>Map</strong>." },
+  { num: 5,  text: "Click the <strong>+</strong> button <strong>5 times</strong> to zoom into the area of focus for the next step." },
+  { num: 6,  text: "On the map, click the <strong>double border Schneider Icon</strong> to review information of this device. Close the device information panel." },
+  { num: 7,  text: "In the view toggle at the top, switch from <strong>Map</strong> to <strong>Activity list</strong>. Click the first row to inspect its details. Close the panel." },
+  { num: 8,  text: "Switch back to <strong>Map</strong>." },
+  { num: 9,  text: "Click the <strong>+</strong> button <strong>5 times</strong> to zoom in to the focus area for the next step." },
+  { num: 10, text: "Click a <strong>blue line</strong> between two devices." },
+  { num: 11, text: "Now click <strong>Flows</strong> at the bottom right to view packet-level details." }
+];
+
+// ── Slide → Step mapping ─────────────────────────────────────
+// Each entry is the slideIndex (0-based) at which that step begins.
+// Based on provided mapping (user 1-based → 0-based here):
+// slide 1→step1, 2→2, 3→3, 6→4, 9→5, 14→6, 16→7, 20→8, 22→9, 27→10, 28→11, 29→complete
+const STEP_TRIGGERS = [0, 1, 2, 4, 8, 13, 15, 19, 21, 26, 27];
+const COMPLETE_SLIDE = 28; // 0-based (slide 29)
+
+function slideIndexToStep(slideIndex) {
+  let step = 0;
+  for (let i = 0; i < STEP_TRIGGERS.length; i++) {
+    if (slideIndex >= STEP_TRIGGERS[i]) step = i;
+    else break;
+  }
+  return step;
+}
+
+let current = 0;
+let done    = new Set();
+let lastSlideIndex = -1;
+
+function render(animate = false) {
+  const display = document.getElementById('step-display');
+  const total   = STEPS.length;
+  const isLast  = current === total - 1;
+  const isComplete = done.size === total;
+
+  document.getElementById('step-counter').textContent =
+    isComplete ? 'Complete!' : `Step ${current + 1} of ${total}`;
+  document.getElementById('btn-prev').disabled = current === 0 || isComplete;
+  document.getElementById('btn-next').style.display = (isLast || isComplete) ? 'none' : '';
+  document.getElementById('btn-complete').style.display = (isLast && !isComplete) ? '' : 'none';
+  document.getElementById('bar').style.setProperty('--progress', (done.size / total * 100) + '%');
+
+  const newText = isComplete
+    ? '&#10004; Lab complete! Great work.'
+    : STEPS[current].text;
+  const newClass = isComplete ? 'complete-msg' : '';
+
+  if (animate) {
+    display.className = 'fade';
+    // Trigger glow on the card
+    bar.classList.remove('glow', 'steady-glow');
+    void bar.offsetWidth;
+    bar.classList.add('glow');
+    bar.addEventListener('animationend', () => {
+      bar.classList.remove('glow');
+      bar.classList.add('steady-glow');
+    }, { once: true });
+    setTimeout(() => {
+      display.innerHTML = newText;
+      display.className = newClass + ' visible';
+    }, 150);
+  } else {
+    display.innerHTML = newText;
+    display.className = newClass + ' visible';
+  }
+
+  document.getElementById('bar').classList.toggle('complete', isComplete);
+}
+
+function prevStep(e) {
+  e && e.stopPropagation();
+  if (current > 0) { done.delete(current); current--; render(true); }
+}
+
+function nextStep(e) {
+  e && e.stopPropagation();
+  if (current < STEPS.length - 1) { done.add(current); current++; render(true); }
+}
+
+function completeAll(e) {
+  e && e.stopPropagation();
+  done.add(current);
+  render(true);
+}
+
+function hideBar(e) {
+  e && e.stopPropagation();
+  document.getElementById('bar').style.display = 'none';
+  document.getElementById('show-tab').style.display = 'block';
+}
+
+function showBar() {
+  document.getElementById('bar').style.display = 'flex';
+  document.getElementById('show-tab').style.display = 'none';
+}
+
+// ── Drag ─────────────────────────────────────────────────────
+const bar = document.getElementById('bar');
+let dragging = false, startX, startY, origLeft, origBottom;
+
+bar.addEventListener('mousedown', e => {
+  if (e.target.tagName === 'BUTTON') return;
+  dragging = true;
+  const rect = bar.getBoundingClientRect();
+  startX = e.clientX;
+  startY = e.clientY;
+  origLeft   = rect.left;
+  origBottom = window.innerHeight - rect.bottom;
+  bar.classList.add('is-dragging');
+  bar.style.transform = 'none';
+  bar.style.left   = origLeft + 'px';
+  bar.style.bottom = origBottom + 'px';
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  let x = origLeft   + (e.clientX - startX);
+  let y = origBottom - (e.clientY - startY);
+  x = Math.max(0, Math.min(window.innerWidth  - bar.offsetWidth,  x));
+  y = Math.max(0, Math.min(window.innerHeight - bar.offsetHeight, y));
+  bar.style.left   = x + 'px';
+  bar.style.bottom = y + 'px';
+});
+
+document.addEventListener('mouseup', () => {
+  if (!dragging) return;
+  dragging = false;
+  bar.classList.remove('is-dragging');
+});
+
+// ── Lab sync (poll slideIndex from iframe) ───────────────────
+function startLabSync() {
+  setInterval(() => {
+    try {
+      const iwin = document.getElementById('lab-frame').contentWindow;
+      const presentations = iwin.AtomiAP && iwin.AtomiAP.presentations;
+      if (!presentations || !presentations[0]) return;
+      const slideIndex = presentations[0].slideIndex;
+      if (slideIndex === lastSlideIndex) return;
+      lastSlideIndex = slideIndex;
+      if (slideIndex >= COMPLETE_SLIDE) {
+        STEPS.forEach((_, i) => done.add(i));
+        current = STEPS.length - 1;
+        render(true);
+        return;
+      }
+      const mappedStep = slideIndexToStep(slideIndex);
+      if (mappedStep !== current) {
+        for (let i = current; i < mappedStep; i++) done.add(i);
+        current = mappedStep;
+        render(true);
+      }
+    } catch (e) { /* iframe not ready */ }
+  }, 600);
+}
+
+render();
+document.getElementById('lab-frame').addEventListener('load', function() {
+  try {
+    const style = this.contentDocument.createElement('style');
+    style.textContent = '.ap-toolbar-top { display: none !important; }';
+    this.contentDocument.head.appendChild(style);
+  } catch(e) {}
+  startLabSync();
+});
+</script>
+</body>
+</html>
