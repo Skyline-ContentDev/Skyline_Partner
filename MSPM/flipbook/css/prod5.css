@@ -4022,7 +4022,6 @@ input[type=range].page-bar-range:focus::-ms-fill-upper {
     box-sizing: border-box;
     text-overflow: ellipsis;
     overflow: hidden;    
-    position: relative;
 
 }
 .layer-player .timer {
@@ -4077,7 +4076,6 @@ input[type=range].page-bar-range:focus::-ms-fill-upper {
     flex-direction: row;
     justify-content: space-around;
     align-items: center;
-    position: relative;
 }
 
 .layer-player-btn .controlsOuter {
@@ -4091,7 +4089,6 @@ input[type=range].page-bar-range:focus::-ms-fill-upper {
     align-items: center;
     justify-content: center;
     text-align: center;
-    z-index: 70;
 }
 
 .layer-player .btn-player {
@@ -4129,7 +4126,6 @@ input[type=range].page-bar-range:focus::-ms-fill-upper {
     width: auto;
     height: 70%;
     position: relative;
-    z-index: 70;
 }
 
 .layer-player .seeker {
@@ -4382,8 +4378,6 @@ input[type=range].page-bar-range:focus::-ms-fill-upper {
     height: 100%;
     align-items: center;
     justify-content: center;
-    position: relative;
-    z-index: 110;
 }
 
 .layer-player-min .duration {
