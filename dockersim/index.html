@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cisco Cyber Vision – Docker Sensor Deployment Lab</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0d1117;color:#c9d1d9;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
+/* ═══════════════════════════════════════════════════════════
+   REAL SYSTEM — terminal & CCV panel
+   Dark GitHub palette, green accents, no lab chrome
+═══════════════════════════════════════════════════════════ */
+.hdr{background:#161b22;border-bottom:1px solid #30363d;padding:10px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.hdr-logo{width:30px;height:30px;background:#0059b3;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:#fff;letter-spacing:-1px}
+.hdr h1{font-size:15px;font-weight:600;color:#f0f6fc}
+.hdr-badge{margin-left:8px;padding:2px 8px;background:#1a4731;border-radius:10px;font-size:11px;color:#3fb950;font-weight:600}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.hdr-info{font-size:11px;color:#6e7681;margin-right:4px}
+.hdr-btn{padding:4px 10px;background:#1f6feb22;border:1px solid #1f6feb55;border-radius:5px;color:#58a6ff;font-size:11px;cursor:pointer;transition:all .15s}
+.hdr-btn:hover{background:#1f6feb44}
+.hdr-btn.active{background:#1f6feb;color:#fff;border-color:#1f6feb}
+
+.main{display:flex;flex:1;overflow:hidden}
+
+/* Terminal — untouched real-system styling */
+.term-wrap{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;position:relative}
+.term-topbar{background:#161b22;border-bottom:1px solid #21262d;padding:6px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.term-dot{width:11px;height:11px;border-radius:50%}
+.term-dot.r{background:#ff5f57}.term-dot.y{background:#febc2e}.term-dot.g{background:#28c840}
+.term-title{font-size:12px;color:#6e7681;margin-left:4px}
+.term-actions{margin-left:auto;display:flex;gap:6px}
+.term-act-btn{padding:3px 8px;background:transparent;border:1px solid #30363d;border-radius:4px;color:#6e7681;font-size:10px;cursor:pointer;transition:all .15s;font-family:inherit}
+.term-act-btn:hover{border-color:#58a6ff;color:#58a6ff}
+.term-out{flex:1;overflow-y:auto;padding:12px 16px;font-family:'Cascadia Code','Fira Code','Consolas',monospace;font-size:12.5px;line-height:1.55;background:#0d1117;cursor:text}
+.line{white-space:pre-wrap;word-break:break-word}
+.line.p{color:#3fb950}.line.c{color:#f0f6fc}.line.o{color:#8b949e}.line.s{color:#3fb950}.line.e{color:#f85149}.line.w{color:#d29922}.line.i{color:#58a6ff}.line.dim{color:#484f58}.line.sys{color:#6e7681;font-style:italic}.line.hl{color:#e3b341}
+.term-cursor{display:inline-block;width:0.55em;height:1em;background:#c9d1d9;vertical-align:text-bottom;margin-left:1px;animation:cur-blink 1.1s step-end infinite}
+@keyframes cur-blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* CCV Center panel — real system */
+.ccv-panel{width:380px;background:#111820;border-left:1px solid #30363d;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;transition:width .3s ease}
+.ccv-panel.hidden{width:0;overflow:hidden;border:none}
+.ccv-topbar{background:#0059b3;padding:9px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.ccv-logo-txt{font-size:13px;font-weight:700;color:#fff}
+.ccv-version{font-size:10px;color:#a8d4ff;margin-left:auto}
+.ccv-nav{background:#0d1829;border-bottom:1px solid #1c2d47;padding:7px 12px;font-size:11px;color:#5b8db8;flex-shrink:0}
+.ccv-nav span{color:#58a6ff;font-weight:500}
+.ccv-body{flex:1;overflow-y:auto;padding:14px}
+.ccv-section-title{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#5b8db8;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid #1c2d47}
+.sensor-row{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;padding:10px;background:#0d1829;border:1px solid #1c2d47;border-radius:7px;transition:border-color .3s}
+.sensor-row.connected{border-color:#1a473155}
+.sr-top{display:flex;align-items:center;gap:8px}
+.sr-icon{width:28px;height:28px;background:#1c2d47;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.sr-name{font-size:12px;font-weight:600;color:#c9d1d9;flex:1}
+.sr-status{display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700}
+.sr-status.connected{background:#1a4731;color:#3fb950}
+.sr-status.disconnected{background:#3b1219;color:#f85149}
+.sr-status.pending{background:#3b2d0d;color:#e3b341}
+.status-dot{width:5px;height:5px;border-radius:50%;background:currentColor}
+.sr-meta{display:grid;grid-template-columns:1fr 1fr;gap:3px 12px;margin-top:3px}
+.sr-meta-item{font-size:10px;color:#6e7681}.sr-meta-item span{color:#8b949e}
+.ccv-empty{text-align:center;padding:30px 20px;color:#3b4d63}
+.ccv-empty .ico{font-size:32px;margin-bottom:8px}
+.ccv-empty p{font-size:12px;line-height:1.5}
+
+/* ═══════════════════════════════════════════════════════════
+   LAB OVERLAY — sidebar, error card, tour, resume
+   Cyan (#00bceb) accent, blue-tinted dark, clear LAB badge
+═══════════════════════════════════════════════════════════ */
+
+/* Sidebar — overlay */
+.sidebar{
+  width:540px;min-width:180px;max-width:700px;
+  background:#07111f;
+  border-right:none;
+  flex-shrink:0;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.sidebar-resize{width:5px;background:#0d1f33;cursor:col-resize;flex-shrink:0;transition:background .15s;position:relative;z-index:10}
+.sidebar-resize:hover,.sidebar-resize.dragging{background:#00bceb}
+
+/* Overlay top bar — the clearest signal this is a lab tool */
+.overlay-topbar{
+  background:linear-gradient(135deg,#003d52,#004f6b);
+  border-bottom:2px solid #00bceb;
+  padding:7px 14px;
+  display:flex;align-items:center;gap:10px;
+  flex-shrink:0;
+}
+.overlay-label{
+  font-family:'Cascadia Code','Consolas',monospace;
+  font-size:9px;font-weight:700;letter-spacing:2.5px;
+  text-transform:uppercase;color:#00bceb;
+  background:rgba(0,188,235,.12);
+  border:1px solid rgba(0,188,235,.35);
+  border-radius:3px;padding:2px 6px;
+  flex-shrink:0;
+}
+.overlay-topbar-title{font-size:12px;font-weight:600;color:#a8dff0;flex:1}
+
+
+.sidebar-inner{flex:1;min-height:0;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+
+/* Progress */
+.prog-label{display:flex;justify-content:space-between;font-size:11px;color:#4a7a9b;margin-bottom:5px}
+.prog-track{height:4px;background:#0d2c47;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,#00bceb,#7dd3fc);transition:width .4s ease;border-radius:3px}
+
+/* Step cards — overlay style */
+.step-card{border:1px solid #0d2c47;border-radius:7px;overflow:hidden;transition:border-color .2s;flex-shrink:0}
+.step-card.active{border-color:rgba(0,188,235,.4)}
+.step-card.done{border-color:rgba(0,188,235,.2)}
+.step-hdr{display:flex;align-items:center;gap:9px;padding:9px 11px;cursor:pointer;background:#0a1625;user-select:none}
+.step-hdr:hover{background:#0d1f33}
+.step-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;background:#0d2c47;color:#4a7a9b;transition:all .2s}
+.step-num.active{background:#00bceb22;color:#00bceb;border:1.5px solid #00bceb}
+.step-num.done{background:#00bceb22;color:#00bceb}
+.step-num.done::after{content:'✓'}
+.step-num.done span{display:none}
+.step-label{font-size:12px;font-weight:500;color:#a8dff0;flex:1;line-height:1.3}
+.step-arrow{font-size:10px;color:#4a7a9b;transition:transform .2s}
+.step-card.open .step-arrow{transform:rotate(90deg)}
+.step-body{display:none;background:#060e1c;border-top:1px solid #0d2c47;padding:10px 11px}
+.step-card.open .step-body{display:block}
+
+/* Tasks pane */
+.task-row{display:flex;align-items:flex-start;gap:7px;padding:3px 0;font-size:14px;color:#4a7a9b;line-height:1.5}
+.task-row.done{color:#00bceb}
+.chk{width:13px;height:13px;border:1px solid #0d2c47;border-radius:3px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:8px;transition:all .2s}
+.task-row.done .chk{background:#00bceb33;border-color:#00bceb;color:#00bceb}
+.hint-cmd{display:flex;align-items:center;gap:5px;margin-top:5px;padding:5px 8px;background:#0a1625;border:1px solid #0d2c47;border-radius:4px;font-family:'Cascadia Code','Consolas',monospace;font-size:12px;color:#4a7a9b;cursor:pointer;transition:all .15s;width:100%;text-align:left}
+.hint-cmd:hover{border-color:#00bceb88;color:#a8dff0}
+.hint-cmd .ico{font-size:10px;color:#2a5a7a;flex-shrink:0}
+.hint-cmd .txt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hint-cmd .send{font-size:10px;color:#00bceb88;flex-shrink:0}
+.step-note{font-size:12px;color:#4a7a9b;margin-top:6px;padding:5px 7px;background:#0a1625;border-radius:4px;border-left:2px solid #0d2c47;line-height:1.4}
+.step-note.info{border-left-color:#00bceb55;color:#5a8aa0}
+
+
+/* ── Error Overlay Card ─────────────────────────────────── */
+/* Positioned inside .term-wrap (position:relative)         */
+.err-card{
+  position:absolute;
+  bottom:58px;right:16px;
+  width:340px;
+  background:rgba(4,8,22,.97);
+  border-radius:10px;
+  z-index:300;
+  box-shadow:0 8px 32px rgba(0,0,0,.7);
+  transform:translateX(16px);opacity:0;
+  pointer-events:none;
+  transition:transform .22s cubic-bezier(.4,0,.2,1),opacity .22s ease;
+}
+.err-card.visible{transform:translateX(0);opacity:1;pointer-events:all}
+.err-card[data-type="dependency"]{border:1px solid rgba(243,156,18,.55);box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 0 1px rgba(243,156,18,.15)}
+.err-card[data-type="oob"]{border:1px solid rgba(99,102,241,.55);box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 0 1px rgba(99,102,241,.15)}
+.err-card[data-type="sequence"]{border:1px solid rgba(0,188,235,.4);box-shadow:0 8px 32px rgba(0,0,0,.7),0 0 0 1px rgba(0,188,235,.1)}
+
+.err-card-hdr{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.err-card-badge{
+  font-family:'Cascadia Code','Consolas',monospace;
+  font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+  padding:2px 5px;border-radius:3px;flex-shrink:0;
+}
+.err-card[data-type="dependency"] .err-card-badge{background:rgba(243,156,18,.15);border:1px solid rgba(243,156,18,.4);color:#f59e0b}
+.err-card[data-type="oob"] .err-card-badge{background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.4);color:#818cf8}
+.err-card[data-type="sequence"] .err-card-badge{background:rgba(0,188,235,.12);border:1px solid rgba(0,188,235,.35);color:#00bceb}
+
+.err-card-step{font-size:10px;color:#2a5a7a;flex:1;font-family:'Cascadia Code',monospace}
+.err-card-close{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:4px;color:#6a9ab8;font-size:12px;cursor:pointer;padding:2px 6px;line-height:1;transition:all .15s}
+.err-card-close:hover{background:rgba(255,255,255,.12);color:#a8dff0;border-color:rgba(255,255,255,.25)}
+
+.err-card-body{padding:10px 12px}
+.err-card-title{font-size:13px;font-weight:600;color:#a8dff0;margin-bottom:5px}
+.err-card-text{font-size:12px;color:#4a7a9b;line-height:1.55}
+
+.err-card-next{
+  margin:8px 12px 10px;
+  padding:7px 9px;
+  background:#0a1625;border-radius:5px;
+  border-left:2px solid #00bceb55;
+  font-size:11px;color:#2a5a7a;
+}
+.err-card-next strong{color:#4a7a9b;display:block;margin-bottom:4px;font-size:10px;text-transform:uppercase;letter-spacing:.8px}
+.err-card-next-row{display:flex;align-items:center;gap:6px;margin-top:4px}
+.err-card-next-row code{font-family:'Cascadia Code',monospace;font-size:11px;color:#7dd3fc;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.err-card-next-insert{padding:2px 7px;background:rgba(0,188,235,.12);border:1px solid rgba(0,188,235,.3);border-radius:3px;color:#00bceb;font-size:10px;cursor:pointer;transition:all .15s;white-space:nowrap;font-family:inherit}
+.err-card-next-insert:hover{background:rgba(0,188,235,.25)}
+
+.err-card-timer{height:2px;background:rgba(0,188,235,.2);border-radius:0 0 10px 10px;overflow:hidden}
+.err-card-timer-fill{height:100%;background:#00bceb44;width:100%;transition:width linear}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#0d2c47;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#1a4060}
+.term-out::-webkit-scrollbar-thumb{background:#30363d}
+.term-out::-webkit-scrollbar-thumb:hover{background:#484f58}
+
+/* notification toast */
+.toast{position:fixed;bottom:20px;right:20px;padding:9px 14px;border-radius:7px;font-size:12px;z-index:999;animation:fadein .3s ease;max-width:280px;line-height:1.4}
+.toast.ok{background:#1a4731;border:1px solid #238636;color:#3fb950}
+.toast.info{background:#0c2d6b;border:1px solid #1f6feb;color:#58a6ff}
+.toast.err{background:#3b1219;border:1px solid #f85149;color:#f85149}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── New Tab Bar ── */
+.newtab-bar{background:#07111f;border-bottom:1px solid #0d2c47;padding:5px 14px;text-align:right;flex-shrink:0}
+.newtab-link{font-family:monospace;font-size:11px;color:#00bceb88;text-decoration:none;opacity:.8;transition:opacity .15s}
+.newtab-link:hover{opacity:1;color:#00bceb}
+
+/* ── Tour Overlay ── */
+#tourOverlay{position:fixed;inset:0;z-index:9000;pointer-events:none}
+#tourOverlay.active{pointer-events:all}
+#tourSpotlight{position:absolute;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.7);border:2px solid #00bceb;transition:all .35s cubic-bezier(.4,0,.2,1);pointer-events:none;z-index:9001}
+#tourBubble{position:absolute;background:#f4f5f7;border:1px solid #00bceb;border-radius:10px;padding:20px 22px;width:320px;z-index:9002;color:#1a1a1a;font-family:Arial,sans-serif;box-shadow:0 8px 32px rgba(0,0,0,.35);transition:all .35s cubic-bezier(.4,0,.2,1)}
+#tourBubble::before{content:'';position:absolute;width:12px;height:12px;background:#f4f5f7;border:1px solid #00bceb;transform:rotate(45deg)}
+#tourBubble.arrow-left::before{left:-7px;top:20px;border-right:none;border-top:none}
+#tourBubble.arrow-right::before{right:-7px;top:20px;border-left:none;border-bottom:none}
+#tourBubble.arrow-top::before{top:-7px;left:24px;border-bottom:none;border-right:none}
+#tourBubble.arrow-bottom::before{bottom:-7px;left:24px;border-top:none;border-left:none}
+#tourBubble.arrow-bottom-right::before{bottom:-7px;right:24px;border-top:none;border-left:none}
+#tourBubble.arrow-top-right::before{top:-7px;right:24px;border-bottom:none;border-right:none}
+.tour-step-label{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:#00bceb;margin-bottom:6px;font-weight:700}
+.tour-title{font-size:17px;font-weight:700;color:#000824;margin-bottom:10px}
+.tour-desc{font-size:15px;line-height:1.6;color:#333}
+.tour-nav{display:flex;align-items:center;gap:8px;margin-top:14px}
+.tour-btn{padding:8px 18px;border-radius:5px;font-size:14px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif;transition:all .15s}
+.tour-btn.secondary{background:transparent;border:2px solid #63666a;color:#333}
+.tour-btn.secondary:hover{border-color:#00bceb;color:#00bceb}
+.tour-btn.primary{background:#00bceb;color:#000824;border:2px solid #008fad}
+.tour-btn.primary:hover{background:#00a8d4}
+.tour-btn.finish{background:#ccd814;color:#000824;border:2px solid #8a9000}
+.tour-skip{margin-left:auto;font-size:13px;color:#888;cursor:pointer;text-decoration:underline;background:none;border:none;font-family:Arial,sans-serif}
+.tour-dots{display:flex;gap:5px;align-items:center}
+.tour-dot{width:6px;height:6px;border-radius:50%;background:#ccc;transition:background .2s}
+.tour-dot.active{background:#00bceb;width:18px;border-radius:3px}
+
+/* Resume modal */
+#resumeModal{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.8);font-family:Arial,sans-serif}
+#resumeBox{background:#07111f;border:1px solid #00bceb44;border-radius:12px;padding:28px 32px;width:360px;text-align:center;box-shadow:0 12px 40px rgba(0,0,0,.8)}
+#resumeBox h2{color:#a8dff0;font-size:17px;margin-bottom:8px}
+#resumeBox p{color:#4a7a9b;font-size:13px;line-height:1.5;margin-bottom:20px}
+.resume-progress{background:#0d2c47;border-radius:6px;height:6px;margin-bottom:20px;overflow:hidden}
+.resume-progress-fill{height:100%;background:linear-gradient(90deg,#00bceb,#7dd3fc);border-radius:6px;transition:width .4s}
+.resume-btns{display:flex;gap:10px;justify-content:center}
+.resume-btn{padding:8px 20px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:Arial,sans-serif}
+.resume-btn.primary{background:#00bceb;color:#000824;border:2px solid #008fad}
+.resume-btn.secondary{background:transparent;border:2px solid #0d2c47;color:#4a7a9b}
+
+#tourLaunchBtn{position:fixed;bottom:14px;left:14px;z-index:8000;width:30px;height:30px;border-radius:50%;background:#07111f;border:2px solid #00bceb55;color:#00bceb88;font-size:14px;font-weight:700;cursor:pointer;font-family:monospace;display:flex;align-items:center;justify-content:center;opacity:.8;transition:all .15s}
+#tourLaunchBtn:hover{opacity:1;border-color:#00bceb;color:#00bceb}
+</style>
+</head>
+<body>
+
+<!-- ── RESUME MODAL ── -->
+<div id="resumeModal" style="display:none">
+  <div id="resumeBox">
+    <h2>Welcome back</h2>
+    <p>You have completed <strong id="resumeCount" style="color:#00bceb">0</strong> of 11 tasks.<br>Resume where you left off?</p>
+    <div class="resume-progress"><div class="resume-progress-fill" id="resumeBar" style="width:0%"></div></div>
+    <div class="resume-btns">
+      <button class="resume-btn primary" onclick="resumeLab()">Resume</button>
+      <button class="resume-btn secondary" onclick="startOver()">Start Over</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOUR OVERLAY ── -->
+<div id="tourOverlay">
+  <div id="tourSpotlight" style="display:none"></div>
+  <div id="tourBubble" style="display:none">
+    <div class="tour-step-label" id="tourStepLabel"></div>
+    <div class="tour-title" id="tourTitle"></div>
+    <div class="tour-desc" id="tourDesc"></div>
+    <div class="tour-nav">
+      <div class="tour-dots" id="tourDots"></div>
+      <button class="tour-btn secondary" id="tourPrev" onclick="tourNav(-1)">Back</button>
+      <button class="tour-btn primary" id="tourNext" onclick="tourNav(1)">Next</button>
+      <button class="tour-skip" onclick="skipTour()">Skip Tour</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── NEW TAB BAR ── -->
+<div class="newtab-bar"><a href="#" onclick="window.open(location.href,'_blank');return false;" class="newtab-link">&#8599; open in new tab</a></div>
+<button id="tourLaunchBtn" onclick="startTour()" title="Restart tour">?</button>
+
+<!-- ── HEADER ── -->
+<header class="hdr">
+  <div class="hdr-logo">CV</div>
+  <h1>Cisco Cyber Vision – Docker Sensor Deployment</h1>
+  <span class="hdr-badge">Lab Simulator</span>
+  <div class="hdr-right">
+    <span class="hdr-info">Ubuntu VM: 192.168.10.50 &nbsp;|&nbsp; Center: center162.sentryo.local (192.168.10.100)</span>
+    <button class="hdr-btn" id="toggleCcv" onclick="toggleCcvPanel()">⊞ Cyber Vision Center</button>
+  </div>
+</header>
+
+<!-- ── MAIN ── -->
+<div class="main">
+
+  <!-- ── SIDEBAR (LAB OVERLAY) ── -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- Overlay identity bar -->
+    <div class="overlay-topbar">
+      <span class="overlay-label">Lab Overlay</span>
+      <span class="overlay-topbar-title">Step Guide</span>
+    </div>
+
+    <div class="sidebar-inner">
+      <!-- Progress -->
+      <div>
+        <div class="prog-label"><span id="progTxt">0 / 11 tasks</span><span id="progPct">0%</span></div>
+        <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step-card open active" id="sc1">
+        <div class="step-hdr" onclick="toggleStep(1)">
+          <div class="step-num active" id="sn1"><span>1</span></div>
+          <div class="step-label">Prerequisites on Ubuntu Host</div>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <div id="tasks-1" class="tasks-pane">
+            <div class="task-row" id="t-hw"><div class="chk"></div>Verify Docker is working (hello-world)</div>
+            <div class="task-row" id="t-cv"><div class="chk"></div>Confirm docker compose plugin</div>
+            <div class="task-row" id="t-ping"><div class="chk"></div>Ping Center from host</div>
+            <button class="hint-cmd" onclick="insertCmd('sudo docker run --rm hello-world')"><span class="ico">▷</span><span class="txt">sudo docker run --rm hello-world</span><span class="send">↵</span></button>
+            <button class="hint-cmd" onclick="insertCmd('docker compose version')"><span class="ico">▷</span><span class="txt">docker compose version</span><span class="send">↵</span></button>
+            <button class="hint-cmd" onclick="insertCmd('ping -c 4 center162.sentryo.local')"><span class="ico">▷</span><span class="txt">ping -c 4 center162.sentryo.local</span><span class="send">↵</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-card" id="sc2">
+        <div class="step-hdr" onclick="toggleStep(2)">
+          <div class="step-num" id="sn2"><span>2</span></div>
+          <div class="step-label">Copy Compose File to VM</div>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <div id="tasks-2" class="tasks-pane">
+            <div class="step-note info">Compose file pre-placed at ~/docker-compose.yml in this lab.</div>
+            <div class="task-row" id="t-ls"><div class="chk"></div>Confirm docker-compose.yml exists</div>
+            <div class="task-row" id="t-cat"><div class="chk"></div>Inspect the compose file</div>
+            <button class="hint-cmd" onclick="insertCmd('ls -la ~/docker-compose.yml')"><span class="ico">▷</span><span class="txt">ls -la ~/docker-compose.yml</span><span class="send">↵</span></button>
+            <button class="hint-cmd" onclick="insertCmd('cat docker-compose.yml')"><span class="ico">▷</span><span class="txt">cat docker-compose.yml</span><span class="send">↵</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-card" id="sc3">
+        <div class="step-hdr" onclick="toggleStep(3)">
+          <div class="step-num" id="sn3"><span>3</span></div>
+          <div class="step-label">Prepare Docker for Center Certs</div>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <div id="tasks-3" class="tasks-pane">
+            <div class="task-row" id="t-mkdir"><div class="chk"></div>Create cert directory for Center FQDN</div>
+            <div class="task-row" id="t-cp"><div class="chk"></div>Copy CA certificate into directory</div>
+            <div class="task-row" id="t-restart"><div class="chk"></div>Restart Docker daemon</div>
+            <button class="hint-cmd" onclick="insertCmd('sudo mkdir -p /etc/docker/certs.d/center162.sentryo.local:443')"><span class="ico">▷</span><span class="txt">sudo mkdir -p /etc/docker/certs.d/center162.sentryo.local:443</span><span class="send">↵</span></button>
+            <button class="hint-cmd" onclick="insertCmd('sudo cp ca.crt /etc/docker/certs.d/center162.sentryo.local:443/')"><span class="ico">▷</span><span class="txt">sudo cp ca.crt /etc/docker/certs.d/…/443/</span><span class="send">↵</span></button>
+            <button class="hint-cmd" onclick="insertCmd('sudo systemctl restart docker')"><span class="ico">▷</span><span class="txt">sudo systemctl restart docker</span><span class="send">↵</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="step-card" id="sc4">
+        <div class="step-hdr" onclick="toggleStep(4)">
+          <div class="step-num" id="sn4"><span>4</span></div>
+          <div class="step-label">Create and Start Sensor Containers</div>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <div id="tasks-4" class="tasks-pane">
+            <div class="task-row" id="t-up"><div class="chk"></div>Launch Cyber Vision sensor stack</div>
+            <div class="task-row" id="t-ps"><div class="chk"></div>Confirm container is running</div>
+            <button class="hint-cmd" onclick="insertCmd('docker compose up -d')"><span class="ico">▷</span><span class="txt">docker compose up -d</span><span class="send">↵</span></button>
+            <button class="hint-cmd" onclick="insertCmd('sudo docker ps')"><span class="ico">▷</span><span class="txt">sudo docker ps</span><span class="send">↵</span></button>
+            <button class="hint-cmd" onclick="insertCmd('sudo docker exec -it ccv-sensor-1 /bin/bash')"><span class="ico">▷</span><span class="txt">sudo docker exec -it ccv-sensor-1 /bin/bash</span><span class="send">↵</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="step-card" id="sc5">
+        <div class="step-hdr" onclick="toggleStep(5)">
+          <div class="step-num" id="sn5"><span>5</span></div>
+          <div class="step-label">Verify Sensor in Cyber Vision Center</div>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <div id="tasks-5" class="tasks-pane">
+            <div class="task-row" id="t-ccv"><div class="chk"></div>Sensor appears as "Connected" in Center</div>
+            <div class="step-note info">Open the Cyber Vision Center panel (top-right button) to verify ZTP enrollment.</div>
+            <button class="hint-cmd" onclick="openCcvVerify()"><span class="ico">⊞</span><span class="txt">Open Cyber Vision Center UI</span><span class="send">→</span></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="step-card" id="sc6">
+        <div class="step-hdr" onclick="toggleStep(6)">
+          <div class="step-num" id="sn6"><span>6</span></div>
+          <div class="step-label">Post-Deployment Configuration</div>
+          <span class="step-arrow">▶</span>
+        </div>
+        <div class="step-body">
+          <div id="tasks-6" class="tasks-pane">
+            <div class="task-row" id="t-post"><div class="chk"></div>Review sensor config in Center</div>
+            <div class="step-note info">In the Cyber Vision Center panel, click the sensor to configure Active Discovery and interfaces.</div>
+            <button class="hint-cmd" onclick="openCcvConfig()"><span class="ico">⊞</span><span class="txt">Configure sensor in CCV Center</span><span class="send">→</span></button>
+            <button class="hint-cmd" onclick="insertCmd('docker compose logs --tail=50 ccv-sensor-1')"><span class="ico">▷</span><span class="txt">docker compose logs --tail=50 ccv-sensor-1</span><span class="send">↵</span></button>
+          </div>
+        </div>
+      </div>
+    </div><!-- /.sidebar-inner -->
+  </aside>
+
+  <div class="sidebar-resize" id="sidebarResize"></div>
+
+  <!-- ── TERMINAL (REAL SYSTEM) ── -->
+  <section class="term-wrap">
+
+    <!-- Error overlay card — lab overlay on top of terminal -->
+    <div class="err-card" id="errCard">
+      <div class="err-card-hdr">
+        <span class="err-card-badge" id="errBadge">LAB GUIDE</span>
+        <span class="err-card-step" id="errStep"></span>
+        <button class="err-card-close" onclick="dismissError()">✕</button>
+      </div>
+      <div class="err-card-body">
+        <div class="err-card-title" id="errTitle"></div>
+        <div class="err-card-text" id="errText"></div>
+      </div>
+      <div class="err-card-next" id="errNext" style="display:none">
+        <strong>Try next</strong>
+        <div class="err-card-next-row">
+          <code id="errNextCmd"></code>
+          <button class="err-card-next-insert" onclick="insertErrCmd()">↵ insert</button>
+        </div>
+      </div>
+      <div class="err-card-timer"><div class="err-card-timer-fill" id="errTimer"></div></div>
+    </div>
+
+    <div class="term-topbar">
+      <div class="term-dot r"></div>
+      <div class="term-dot y"></div>
+      <div class="term-dot g"></div>
+      <span class="term-title">labuser@ubuntu-vm: ~</span>
+      <div class="term-actions">
+        <button class="term-act-btn" onclick="clearTerm()">Clear</button>
+      </div>
+    </div>
+    <div class="term-out" id="termOut" onclick="document.getElementById('termInput').focus()"></div>
+    <input id="termInput" type="text" autocomplete="off" autocorrect="off" spellcheck="false"
+           style="position:fixed;left:-9999px;width:1px;height:1px;opacity:0">
+  </section>
+
+  <!-- ── CCV CENTER PANEL (REAL SYSTEM) ── -->
+  <section class="ccv-panel hidden" id="ccvPanel">
+    <div class="ccv-topbar">
+      <span style="font-size:18px">🔵</span>
+      <span class="ccv-logo-txt">Cisco Cyber Vision Center</span>
+      <span class="ccv-version">v5.1.2</span>
+    </div>
+    <div class="ccv-nav" id="ccvNav">Admin → Sensors → <span>Sensor Explorer</span></div>
+    <div class="ccv-body" id="ccvBody">
+      <div class="ccv-section-title">Sensor Explorer</div>
+      <div class="ccv-empty" id="ccvEmpty">
+        <div class="ico">📡</div>
+        <p>No sensor containers detected yet.<br>Complete Step 4 to see the sensor register here.</p>
+      </div>
+      <div id="ccvSensorList" style="display:none"></div>
+    </div>
+  </section>
+
+</div><!-- /.main -->
+
+<script>
+// ────────────────────────────────────────────────
+//  STATE
+// ────────────────────────────────────────────────
+const S = {
+  completedTasks: new Set(),
+  history: [], histIdx: -1,
+  cwd: '/home/labuser',
+  containerUp: false,
+  insideContainer: false,
+  ccvPanelOpen: false,
+  sensorStatus: 'disconnected',
+  certsDone: false,
+};
+
+const TOTAL_TASKS = 11;
+const LS_TASKS = 'ccv_docker_tasks';
+const LS_TOUR  = 'ccv_docker_tour_done';
+
+// ────────────────────────────────────────────────
+//  BOOT
+// ────────────────────────────────────────────────
+const bootLines = [
+  {t:'sys', v:'Ubuntu 22.04.3 LTS  |  kernel 5.15.0-91-generic'},
+  {t:'sys', v:'─────────────────────────────────────────────────────────────────'},
+  {t:'o',   v:'  Host   : 192.168.10.50'},
+  {t:'o',   v:'  Center : center162.sentryo.local (192.168.10.100)'},
+  {t:'o',   v:'  Files  : ~/docker-compose.yml  ~/ca.crt'},
+  {t:'sys', v:'─────────────────────────────────────────────────────────────────'},
+  {t:'o',   v:''},
+];
+
+// ────────────────────────────────────────────────
+//  ERROR OVERLAY DATA
+// ────────────────────────────────────────────────
+const ERROR_INFO = {
+  cp_no_mkdir: {
+    type: 'dependency', badge: 'LAB GUIDE', step: 'Step 3 · Task 1',
+    title: 'Directory Does Not Exist',
+    text: 'cp cannot write into a path that has not been created. The per-registry certificate directory must exist before ca.crt can be copied into it.',
+    next: 'sudo mkdir -p /etc/docker/certs.d/center162.sentryo.local:443',
+  },
+  compose_no_file: {
+    type: 'dependency', badge: 'LAB GUIDE', step: 'Step 2',
+    title: 'Compose File Not Verified',
+    text: 'Docker Compose could not locate a configuration file. Confirm docker-compose.yml exists in your home directory and that you have reviewed its contents.',
+    next: 'ls -la ~/docker-compose.yml',
+  },
+  exec_no_container: {
+    type: 'dependency', badge: 'LAB GUIDE', step: 'Step 4 · Task 1',
+    title: 'Container Not Running',
+    text: 'No container named ccv-sensor-1 exists yet. The sensor stack must be started before a shell can be attached to it.',
+    next: 'docker compose up -d',
+  },
+  restart_no_cert: {
+    type: 'sequence', badge: 'LAB GUIDE', step: 'Step 3 · Note',
+    title: 'Certificate Not Yet Installed',
+    text: 'Docker will restart successfully, but without the CA certificate in /etc/docker/certs.d/ the daemon will reject TLS connections to Center\'s private registry when you run compose up.',
+    next: 'sudo cp ca.crt /etc/docker/certs.d/center162.sentryo.local:443/',
+  },
+  oob_apt: {
+    type: 'oob', badge: 'OUT OF SCOPE', step: 'Not Required',
+    title: 'Package Manager Not Needed',
+    text: 'Docker Engine and the Compose plugin are already installed on this host. No additional packages are required for this lab.',
+    next: null,
+  },
+  oob_editor: {
+    type: 'oob', badge: 'OUT OF SCOPE', step: 'Not Required',
+    title: 'File Editing Not Required',
+    text: 'The compose file and CA certificate have been pre-placed in your home directory. This lab does not require modifying any files — use cat to review them.',
+    next: 'cat docker-compose.yml',
+  },
+  oob_build: {
+    type: 'oob', badge: 'OUT OF SCOPE', step: 'Not Required',
+    title: 'Image Build Not Required',
+    text: 'The sensor image is pre-built and hosted on the Center\'s private registry. This lab deploys a pre-built image — no Dockerfile or build step is needed.',
+    next: 'docker compose up -d',
+  },
+};
+
+let errDismissTimer = null;
+
+function showError(key) {
+  const info = ERROR_INFO[key];
+  if (!info) return;
+  const card = document.getElementById('errCard');
+  card.dataset.type = info.type;
+  document.getElementById('errBadge').textContent = info.badge;
+  document.getElementById('errStep').textContent = info.step;
+  document.getElementById('errTitle').textContent = info.title;
+  document.getElementById('errText').textContent = info.text;
+  const nextEl = document.getElementById('errNext');
+  const nextCmdEl = document.getElementById('errNextCmd');
+  if (info.next) {
+    nextEl.style.display = '';
+    nextCmdEl.textContent = info.next;
+    nextCmdEl.dataset.cmd = info.next;
+  } else {
+    nextEl.style.display = 'none';
+  }
+  // Restart animation
+  card.classList.remove('visible');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => card.classList.add('visible'));
+  });
+  // Timer bar
+  const fill = document.getElementById('errTimer');
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      fill.style.transition = 'width 15s linear';
+      fill.style.width = '0%';
+    });
+  });
+  if (errDismissTimer) clearTimeout(errDismissTimer);
+  errDismissTimer = setTimeout(dismissError, 15000);
+}
+
+function dismissError() {
+  document.getElementById('errCard').classList.remove('visible');
+  if (errDismissTimer) clearTimeout(errDismissTimer);
+}
+
+function insertErrCmd() {
+  const cmd = document.getElementById('errNextCmd').dataset.cmd;
+  if (cmd) { insertCmd(cmd); dismissError(); }
+}
+
+// ────────────────────────────────────────────────
+//  COMMAND REGISTRY
+// ────────────────────────────────────────────────
+function normalize(cmd){ return cmd.trim().replace(/\s+/g,' '); }
+
+const CMD_MAP = [
+  { match: c => /^sudo docker run --rm hello-world/.test(c), run: cmdHelloWorld, task: 't-hw' },
+  { match: c => /^docker compose version/.test(c) || /^docker-compose version/.test(c), run: cmdComposeVersion, task: 't-cv' },
+  { match: c => /^ping/.test(c) && /center162|192\.168\.10\.100/.test(c), run: cmdPing, task: 't-ping' },
+  { match: c => /^ls/.test(c) && /docker-compose/.test(c), run: cmdLsCompose, task: 't-ls' },
+  { match: c => /^cat\s+(.*\/)?docker-compose\.yml/.test(c), run: cmdCatCompose, task: 't-cat' },
+  { match: c => /^sudo mkdir/.test(c) && /certs\.d/.test(c), run: cmdMkdir, task: 't-mkdir' },
+  { match: c => /^sudo cp\s+ca\.crt/.test(c) && /certs\.d/.test(c), run: cmdCpCert, task: 't-cp' },
+  { match: c => /^sudo systemctl restart docker/.test(c), run: cmdRestartDocker, task: 't-restart' },
+  { match: c => /^docker[\s-]compose up -d/.test(c)||/^docker compose up -d/.test(c), run: cmdComposeUp, task: 't-up' },
+  { match: c => /^(sudo )?docker ps/.test(c), run: cmdDockerPs, task: 't-ps' },
+  { match: c => /^(sudo )?docker exec -it ccv-sensor-1/.test(c), run: cmdExec, task: null },
+  { match: c => /^docker compose logs/.test(c)||/^docker-compose logs/.test(c), run: cmdLogs, task: null },
+  // OOB — explicit lab-scope feedback
+  { match: c => /^(sudo )?apt/.test(c), run: ()=>{ lines([{t:'e',v:'bash: apt: permission context — this host is managed'}]); showError('oob_apt'); }, task: null },
+  { match: c => /^(vim?|nano|emacs)\b/.test(c), run: ()=>{ lines([{t:'e',v:`bash: ${c.split(' ')[0]}: not installed on this system`}]); showError('oob_editor'); }, task: null },
+  { match: c => /^docker compose build/.test(c)||/^docker-compose build/.test(c), run: ()=>{ lines([{t:'e',v:'ERROR: no Dockerfile found in the current directory'}]); showError('oob_build'); }, task: null },
+  // Generic utilities
+  { match: c => c==='clear'||c==='cls', run: ()=>{ clearTerm(); return null; }, task: null },
+  { match: c => c==='help', run: ()=>{ lines([{t:'i',v:'Tip: expand any step card in the sidebar for task checklists and hint commands.'}]); }, task: null },
+  { match: c => /^ls/.test(c), run: cmdLsGeneric, task: null },
+  { match: c => /^cd/.test(c), run: cmdCd, task: null },
+  { match: c => /^pwd/.test(c), run: ()=>lines([{t:'o',v:S.cwd}]), task: null },
+  { match: c => /^whoami/.test(c), run: ()=>lines([{t:'o',v:'labuser'}]), task: null },
+  { match: c => /^uname/.test(c), run: ()=>lines([{t:'o',v:'Linux ubuntu-vm 5.15.0-91-generic #101-Ubuntu SMP Tue Nov 14 13:30:08 UTC 2023 x86_64 x86_64 x86_64 GNU/Linux'}]), task: null },
+  { match: c => /^cat\s+ca\.crt/.test(c), run: cmdCatCert, task: null },
+  { match: c => /^sudo systemctl status docker/.test(c), run: cmdDockerStatus, task: null },
+  { match: c => /^sudo systemctl (start|stop) docker/.test(c), run: cmdDockerStartStop, task: null },
+  { match: c => /^(sudo )?docker (images|image ls)/.test(c), run: cmdDockerImages, task: null },
+  { match: c => /^history/.test(c), run: cmdHistory, task: null },
+  { match: c => /^exit/.test(c), run: cmdExit, task: null },
+  { match: c => /^sudo docker (stop|rm)/.test(c), run: cmdStopRm, task: null },
+  { match: c => /^scp\s/.test(c), run: cmdScp, task: null },
+  { match: c => /^ping/.test(c), run: cmdPingGeneric, task: null },
+  { match: c => /^(sudo )?docker container (ls|list|ps)/.test(c), run: cmdDockerPs, task: null },
+];
+
+// ────────────────────────────────────────────────
+//  OUTPUT HELPERS
+// ────────────────────────────────────────────────
+function lines(arr){
+  const out=document.getElementById('termOut');
+  arr.forEach(({t,v})=>{ const d=document.createElement('div'); d.className='line '+(t||'o'); d.textContent=v; out.appendChild(d); });
+  out.scrollTop=out.scrollHeight;
+}
+function cwdShort(){ return S.cwd.replace('/home/labuser','~'); }
+function currentPromptText(){ return S.insideContainer ? 'root@ccv-sensor-1:/# ' : `labuser@ubuntu-vm:${cwdShort()}$ `; }
+function printPrompt(){ /* prompt is built inline — no-op kept for call-site compat */ }
+
+function addPromptLine(){
+  const out = document.getElementById('termOut');
+  const div = document.createElement('div');
+  div.className = 'line';
+  div.id = 'termCurrentLine';
+  div.innerHTML = `<span class="line p" style="display:inline" id="termCurrentPrompt">${escHtml(currentPromptText())}</span><span id="termTypedText" style="color:#f0f6fc"></span><span class="term-cursor"></span>`;
+  out.appendChild(div);
+  out.scrollTop = out.scrollHeight;
+}
+
+function lockCurrentLine(){
+  const line = document.getElementById('termCurrentLine');
+  if(!line) return;
+  line.removeAttribute('id');
+  line.querySelector('#termCurrentPrompt')?.removeAttribute('id');
+  line.querySelector('#termTypedText')?.removeAttribute('id');
+  line.querySelector('.term-cursor')?.remove();
+}
+
+function updateTypedDisplay(){
+  const el = document.getElementById('termTypedText');
+  if(el) el.textContent = document.getElementById('termInput').value;
+}
+
+function completeTask(id){
+  if(!id||S.completedTasks.has(id)) return;
+  S.completedTasks.add(id);
+  const el=document.getElementById(id);
+  if(el){ el.classList.add('done'); el.querySelector('.chk').textContent='✓'; }
+  updateProgress(); checkStepComplete();
+}
+function updateProgress(){
+  const n=S.completedTasks.size, pct=Math.round(n/TOTAL_TASKS*100);
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progTxt').textContent=n+' / '+TOTAL_TASKS+' tasks';
+  document.getElementById('progPct').textContent=pct+'%';
+}
+function checkStepComplete(){
+  [[1,['t-hw','t-cv','t-ping']],[2,['t-ls','t-cat']],[3,['t-mkdir','t-cp','t-restart']],
+   [4,['t-up','t-ps']],[5,['t-ccv']],[6,['t-post']]].forEach(([id,tasks])=>{
+    if(!tasks.every(t=>S.completedTasks.has(t))) return;
+    const num=document.getElementById('sn'+id), card=document.getElementById('sc'+id);
+    num.classList.remove('active'); num.classList.add('done');
+    card.classList.remove('active'); card.classList.add('done');
+  });
+}
+function toast(msg,type='ok',dur=3000){
+  const t=document.createElement('div'); t.className='toast '+type; t.textContent=msg;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),dur);
+}
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ────────────────────────────────────────────────
+//  COMMAND IMPLEMENTATIONS
+// ────────────────────────────────────────────────
+function cmdHelloWorld(){
+  lines([
+    {t:'o',v:"Unable to find image 'hello-world:latest' locally"},
+    {t:'o',v:'latest: Pulling from library/hello-world'},
+    {t:'o',v:'c1ec31eb5944: Pull complete'},
+    {t:'o',v:'Digest: sha256:d000bc569937abbe195e20322a0bde6b2922d805332fd6d8a68b19f524b7d21d'},
+    {t:'o',v:'Status: Downloaded newer image for hello-world:latest'},
+    {t:'o',v:''},
+    {t:'s',v:'Hello from Docker!'},
+    {t:'s',v:'This message shows that your installation appears to be working correctly.'},
+    {t:'o',v:''},
+    {t:'o',v:'To generate this message, Docker took the following steps:'},
+    {t:'o',v:' 1. The Docker client contacted the Docker daemon.'},
+    {t:'o',v:' 2. The Docker daemon pulled the "hello-world" image from the Docker Hub.'},
+    {t:'o',v:' 3. The Docker daemon created a new container from that image which runs the'},
+    {t:'o',v:'    executable that produces the output you are currently reading.'},
+    {t:'o',v:' 4. The Docker daemon streamed that output to the Docker client, which sent it'},
+    {t:'o',v:'    to your terminal.'},
+    {t:'o',v:''},
+    {t:'dim',v:'For more examples and ideas, visit: https://docs.docker.com/get-started/'},
+  ]);
+}
+function cmdComposeVersion(){ lines([{t:'s',v:'Docker Compose version v2.24.6'}]); }
+function cmdPing(c){
+  const count=(c.match(/-c\s+(\d+)/)||[])[1]||4;
+  const arr=[{t:'o',v:'PING center162.sentryo.local (192.168.10.100) 56(84) bytes of data.'}];
+  for(let i=1;i<=Math.min(parseInt(count),6);i++)
+    arr.push({t:'s',v:`64 bytes from 192.168.10.100: icmp_seq=${i} ttl=64 time=${(0.5+Math.random()*.8).toFixed(3)} ms`});
+  arr.push({t:'o',v:''},
+    {t:'o',v:'--- center162.sentryo.local ping statistics ---'},
+    {t:'o',v:`${count} packets transmitted, ${count} received, 0% packet loss, time ${parseInt(count)*1005}ms`},
+    {t:'s',v:'rtt min/avg/max/mdev = 0.512/0.721/0.987/0.148 ms'});
+  lines(arr);
+}
+function cmdPingGeneric(c){
+  const host=(c.split(' ').find(p=>!p.startsWith('-')&&p!=='ping'))||'host';
+  lines([{t:'w',v:`ping: ${host}: Name or service not known`}]);
+}
+function cmdLsCompose(){ lines([{t:'o',v:'-rw-rw-r-- 1 labuser labuser 1742 Jan  9 08:34 /home/labuser/docker-compose.yml'}]); }
+function cmdCatCompose(){
+  lines([
+    {t:'hl',v:'# Generated by Cisco Cyber Vision Center v5.1.2'},
+    {t:'hl',v:'# Sensor: docker-sensor-lab-01  |  Token: 8f3a-bc29-e701'},
+    {t:'o',v:''},{t:'i',v:'services:'},{t:'o',v:'  ccv-sensor-1:'},
+    {t:'o',v:'    image: center162.sentryo.local/cv/sensor-app:5.1.2'},
+    {t:'o',v:'    container_name: ccv-sensor-1'},{t:'o',v:'    restart: unless-stopped'},
+    {t:'o',v:'    network_mode: "host"'},{t:'o',v:'    privileged: true'},
+    {t:'o',v:'    environment:'},
+    {t:'o',v:'      - CCV_CENTER_FQDN=center162.sentryo.local'},
+    {t:'o',v:'      - CCV_CENTER_PORT=443'},
+    {t:'o',v:'      - CCV_SENSOR_TOKEN=8f3a-bc29-e701-4c52-a3d8'},
+    {t:'o',v:'      - CCV_SENSOR_NAME=docker-sensor-lab-01'},
+    {t:'o',v:'    volumes:'},{t:'o',v:'      - ccv_sensor_data:/data'},
+    {t:'o',v:'      - /run/docker.sock:/run/docker.sock'},
+    {t:'o',v:''},{t:'i',v:'volumes:'},{t:'o',v:'  ccv_sensor_data:'},
+  ]);
+}
+function cmdMkdir(){ lines([{t:'dim',v:'[sudo] password for labuser: '}]); }
+function cmdCpCert(){
+  if(!S.completedTasks.has('t-mkdir')){
+    lines([{t:'e',v:"cp: cannot create regular file '/etc/docker/certs.d/center162.sentryo.local:443/ca.crt': No such file or directory"}]);
+    showError('cp_no_mkdir'); return;
+  }
+  S.certsDone=true;
+}
+function cmdRestartDocker(){
+  if(!S.certsDone) showError('restart_no_cert');
+  lines([
+    {t:'o',v:'Stopping docker.socket…'},{t:'o',v:'Stopping docker.service…'},
+    {t:'o',v:'Starting docker.socket…'},{t:'o',v:'Starting docker.service…'},
+  ]);
+}
+function cmdComposeUp(){
+  if(!S.completedTasks.has('t-ls')){
+    lines([{t:'e',v:"docker compose: can't find a suitable configuration file in this directory or its parents"}]);
+    showError('compose_no_file'); return;
+  }
+  lines([
+    {t:'i',v:'[+] Pulling sensor image from center162.sentryo.local …'},
+    {t:'o',v:'center162.sentryo.local/cv/sensor-app:5.1.2: Pulling from cv/sensor-app'},
+    {t:'o',v:'  a3ed95caeb02: Pull complete'},{t:'o',v:'  b2c03f71e22b: Pull complete'},
+    {t:'o',v:'  fc1ec50e64b2: Pull complete'},
+    {t:'o',v:'Digest: sha256:93cf4de4a1b14a9a4dd4f55f9a3e0b3e8e7c1234abcd'},
+    {t:'o',v:'Status: Downloaded newer image for center162.sentryo.local/cv/sensor-app:5.1.2'},
+    {t:'o',v:''},{t:'s',v:'[+] Running 3/3'},
+    {t:'s',v:' ✔ Network ccv_default           Created                      0.1s'},
+    {t:'s',v:' ✔ Volume  "ccv_sensor_data"      Created                      0.0s'},
+    {t:'s',v:' ✔ Container ccv-sensor-1         Started                      2.3s'},
+  ]);
+  S.containerUp=true;
+  setTimeout(()=>{
+    S.sensorStatus='pending'; updateCcvPanel();
+    setTimeout(()=>{ S.sensorStatus='connected'; updateCcvPanel(); toast('✔ Sensor CONNECTED in Cyber Vision Center','ok',5000); },4000);
+  },3000);
+}
+function cmdDockerPs(){
+  if(!S.containerUp){ lines([{t:'o',v:'CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES'}]); return; }
+  lines([
+    {t:'hl',v:'CONTAINER ID   IMAGE                                            COMMAND                  CREATED          STATUS          PORTS     NAMES'},
+    {t:'s', v:'a8f3d2c91b45   center162.sentryo.local/cv/sensor-app:5.1.2   "/opt/cisco/ccv/star…"   2 minutes ago    Up 2 minutes              ccv-sensor-1'},
+  ]);
+}
+function cmdExec(){
+  if(!S.containerUp){ lines([{t:'e',v:'Error response from daemon: No such container: ccv-sensor-1'}]); showError('exec_no_container'); return; }
+  lines([{t:'o',v:'root@ccv-sensor-1:/#'}]);
+  S.insideContainer=true; printPrompt();
+}
+function cmdExit(){
+  if(S.insideContainer){ S.insideContainer=false; printPrompt(); lines([{t:'o',v:'exit'}]); }
+  else lines([{t:'o',v:'logout'}]);
+}
+function cmdLogs(){
+  if(!S.containerUp){ lines([{t:'e',v:'Error response from daemon: No such container: ccv-sensor-1'}]); return; }
+  lines([
+    {t:'dim',v:'Attaching to ccv-sensor-1'},
+    {t:'o',v:'ccv-sensor-1  | [2024-01-09 08:34:01] INFO  CCV Sensor v5.1.2 starting…'},
+    {t:'o',v:'ccv-sensor-1  | [2024-01-09 08:34:02] INFO  Loading provisioning token'},
+    {t:'o',v:'ccv-sensor-1  | [2024-01-09 08:34:02] INFO  Connecting to center162.sentryo.local:443'},
+    {t:'o',v:'ccv-sensor-1  | [2024-01-09 08:34:03] INFO  TLS handshake complete'},
+    {t:'s',v:'ccv-sensor-1  | [2024-01-09 08:34:04] INFO  ZTP enrollment accepted — sensor ID: a8f3d2c91b45'},
+    {t:'s',v:'ccv-sensor-1  | [2024-01-09 08:34:05] INFO  Sensor status: CONNECTED'},
+    {t:'o',v:'ccv-sensor-1  | [2024-01-09 08:34:06] INFO  Passive capture interface: eth0'},
+    {t:'o',v:'ccv-sensor-1  | [2024-01-09 08:34:07] INFO  Waiting for traffic…'},
+  ]);
+}
+function cmdDockerImages(){
+  const base=[
+    {t:'hl',v:'REPOSITORY                                       TAG       IMAGE ID       CREATED         SIZE'},
+    {t:'o', v:'hello-world                                      latest    d2c94e258dcb   10 months ago   13.3kB'},
+  ];
+  if(S.containerUp) base.push({t:'o',v:'center162.sentryo.local/cv/sensor-app          5.1.2     e7c92a4f8b31   2 weeks ago     423MB'});
+  lines(base);
+}
+function cmdDockerStatus(){
+  lines([
+    {t:'o',v:'● docker.service - Docker Application Container Engine'},
+    {t:'o',v:'     Loaded: loaded (/lib/systemd/system/docker.service; enabled; vendor preset: enabled)'},
+    {t:'s',v:'     Active: active (running) since '+new Date().toUTCString()+'; 2h 11min ago'},
+    {t:'o',v:'   Main PID: 1234 (dockerd)'},{t:'o',v:'      Tasks: 18'},{t:'o',v:'     Memory: 78.3M'},
+  ]);
+}
+function cmdDockerStartStop(c){ lines([{t:'o',v:(c.includes('stop')?'Stopping':'Starting')+' docker.service…'}]); }
+function cmdStopRm(c){
+  if(c.includes('ccv-sensor-1')){
+    if(c.includes('stop')){ S.containerUp=false; S.sensorStatus='disconnected'; updateCcvPanel(); }
+    lines([{t:'s',v:'ccv-sensor-1'}]);
+  } else lines([{t:'e',v:'Error: No such container'}]);
+}
+function cmdScp(){ lines([{t:'s',v:'docker-compose.yml                            100% 1742     2.1MB/s   00:00'}]); }
+function cmdCatCert(){
+  lines([{t:'dim',v:'-----BEGIN CERTIFICATE-----'},{t:'dim',v:'MIIDazCCAlOgAwIBAgIUQz4xM2NkNzQ4OTBiNzA4YjYzNDYw…'},{t:'dim',v:'[... truncated ...]'},{t:'dim',v:'-----END CERTIFICATE-----'}]);
+}
+function cmdLsGeneric(c){
+  if(c.includes('/etc/docker/certs.d')){
+    if(S.completedTasks.has('t-mkdir')) lines([{t:'o',v:'center162.sentryo.local:443/'}]);
+    else lines([{t:'e',v:"ls: cannot access '/etc/docker/certs.d': No such file or directory"}]);
+  } else if(c.includes('certs.d/center162')&&S.certsDone){
+    lines([{t:'o',v:'ca.crt'}]);
+  } else {
+    lines(['docker-compose.yml','ca.crt','.bashrc','.bash_history','.profile'].map(f=>({t:'o',v:f})));
+  }
+}
+function cmdCd(c){
+  const t=c.replace(/^cd\s*/,'').trim()||'/home/labuser';
+  if(t==='~'||t===''||t==='/home/labuser') S.cwd='/home/labuser';
+  else if(t==='/'||t.startsWith('/')) S.cwd=t;
+  else S.cwd=S.cwd+'/'+t;
+  printPrompt();
+}
+function cmdHistory(){
+  const h=S.history.slice(-20);
+  h.forEach((cmd,i)=>lines([{t:'dim',v:`  ${String(h.length-i).padStart(3,' ')}  ${cmd}`}]));
+}
+
+// ────────────────────────────────────────────────
+//  TERMINAL INPUT
+// ────────────────────────────────────────────────
+const inp=document.getElementById('termInput');
+inp.addEventListener('input', updateTypedDisplay);
+inp.addEventListener('keydown',e=>{
+  if(e.key==='Enter') runCmd();
+  else if(e.key==='ArrowUp'){ e.preventDefault(); if(S.histIdx<S.history.length-1){ S.histIdx++; inp.value=S.history[S.history.length-1-S.histIdx]; updateTypedDisplay(); } }
+  else if(e.key==='ArrowDown'){ e.preventDefault(); if(S.histIdx>0){ S.histIdx--; inp.value=S.history[S.history.length-1-S.histIdx]; } else{ S.histIdx=-1; inp.value=''; } updateTypedDisplay(); }
+  else if(e.key==='Tab'){ e.preventDefault(); tabComplete(); }
+  else if(e.key==='c'&&e.ctrlKey){ e.preventDefault(); const t=document.getElementById('termTypedText'); if(t) t.textContent=inp.value+'^C'; inp.value=''; lockCurrentLine(); addPromptLine(); }
+  else if(e.key==='Escape') dismissError();
+});
+
+function runCmd(){
+  const raw=inp.value.trim();
+  inp.value='';
+  lockCurrentLine();
+  if(!raw){ addPromptLine(); return; }
+  S.history.push(raw); S.histIdx=-1;
+  const norm=normalize(raw);
+  let handled=false;
+  for(const entry of CMD_MAP){
+    if(entry.match(norm)){ const r=entry.run(norm); if(r!==null&&entry.task) completeTask(entry.task); handled=true; break; }
+  }
+  if(!handled) lines([{t:'e',v:`${raw.split(' ')[0]}: command not found`}]);
+  addPromptLine();
+  document.getElementById('termOut').scrollTop=document.getElementById('termOut').scrollHeight;
+}
+function insertCmd(cmd){ inp.value=cmd; updateTypedDisplay(); inp.focus(); }
+function tabComplete(){
+  const val=inp.value.trim();
+  const cmds=['sudo docker run --rm hello-world','docker compose version','docker compose up -d','sudo docker ps','ping -c 4 center162.sentryo.local','ls -la ~/docker-compose.yml','cat docker-compose.yml','sudo mkdir -p /etc/docker/certs.d/center162.sentryo.local:443','sudo cp ca.crt /etc/docker/certs.d/center162.sentryo.local:443/','sudo systemctl restart docker','docker compose logs --tail=50 ccv-sensor-1'];
+  const match=cmds.find(c=>c.startsWith(val)&&c!==val);
+  if(match){ inp.value=match; updateTypedDisplay(); }
+}
+function clearTerm(){ document.getElementById('termOut').innerHTML=''; addPromptLine(); }
+
+// ────────────────────────────────────────────────
+//  SIDEBAR MODE TOGGLE
+// ────────────────────────────────────────────────
+const GUIDE_DATA = {
+  1:{
+    tasks:['t-hw','t-cv','t-ping'],
+    objective:'Confirm the Ubuntu host meets all requirements before deploying the sensor container.',
+    cmds:[
+      {cmd:'sudo docker run --rm hello-world',desc:'Runs a disposable test container. Look for "Hello from Docker!" — confirms the daemon is functioning correctly.'},
+      {cmd:'docker compose version',desc:'Confirms the Compose v2 CLI plugin is present. The sensor stack uses "docker compose" (not the legacy docker-compose binary).'},
+      {cmd:'ping -c 4 center162.sentryo.local',desc:'Tests IP reachability to Cyber Vision Center. The sensor requires TCP 443 outbound to Center for TLS and ZTP enrollment.'},
+    ],
+    notes:[{type:'info',text:'If ping fails, verify routing between 192.168.10.50 (this host) and 192.168.10.100 (Center). The sensor initiates all connections — no inbound ports required.'}],
+  },
+  2:{
+    tasks:['t-ls','t-cat'],
+    objective:'Locate and review the Docker Compose file generated by Cyber Vision Center. It contains the sensor image path and provisioning token.',
+    prose:'In production: download from Center UI → Admin → Sensors → New Sensor → Docker → Download Compose File. In this lab it is pre-placed at ~/docker-compose.yml.',
+    cmds:[
+      {cmd:'ls -la ~/docker-compose.yml',desc:'Confirms the file exists and was recently generated. The provisioning token inside expires — a stale file will fail enrollment.'},
+      {cmd:'cat docker-compose.yml',desc:'Review the full file. Pay attention to the environment variables, especially CCV_SENSOR_TOKEN (single-use) and CCV_CENTER_FQDN (must match your CA cert).'},
+    ],
+    notes:[{type:'warn',text:'The provisioning token is single-use and time-limited. If enrollment fails, regenerate the compose file in Center to get a fresh token.'}],
+  },
+  3:{
+    tasks:['t-mkdir','t-cp','t-restart'],
+    objective:'Install Center\'s CA certificate so Docker can authenticate TLS connections to Center\'s private registry and pull the sensor image.',
+    prose:'Docker looks for per-registry CA certs in /etc/docker/certs.d/<FQDN:port>/. The directory name must exactly match the registry address used in the compose file image field.',
+    cmds:[
+      {cmd:'sudo mkdir -p /etc/docker/certs.d/center162.sentryo.local:443',desc:'Creates the per-registry cert directory. The colon is intentional — Docker parses the directory name as host:port.'},
+      {cmd:'sudo cp ca.crt /etc/docker/certs.d/center162.sentryo.local:443/',desc:'Copies the CA certificate. Both commands are silent on success. Verify with: ls /etc/docker/certs.d/center162.sentryo.local:443/'},
+      {cmd:'sudo systemctl restart docker',desc:'Reloads the daemon to pick up the new cert. Without this, "compose up" will fail with an x509 certificate error when pulling the sensor image.'},
+    ],
+    notes:[
+      {type:'tip',text:'Run these three commands in order. Copying the cert before the directory exists will fail, and pulling the image before the daemon restarts will get a TLS error.'},
+    ],
+  },
+  4:{
+    tasks:['t-up','t-ps'],
+    objective:'Use Docker Compose to pull and start the sensor container. The container contacts Center automatically via Zero-Touch Provisioning (ZTP).',
+    prose:'ZTP: the container reads the provisioning token → opens a TLS connection to Center → Center validates the token and issues a sensor certificate → the sensor becomes Connected.',
+    cmds:[
+      {cmd:'docker compose up -d',desc:'Pulls the sensor image from Center\'s registry, creates the Docker network and volume, starts the container in detached mode. ZTP begins automatically.'},
+      {cmd:'sudo docker ps',desc:'Lists running containers. Look for ccv-sensor-1 with Status "Up". "Restarting" means check logs for an error.'},
+      {cmd:'docker compose logs --tail=50 ccv-sensor-1',desc:'Last 50 log lines. Look for "ZTP enrollment accepted" and "Status: CONNECTED" to confirm successful enrollment.'},
+      {cmd:'sudo docker exec -it ccv-sensor-1 /bin/bash',desc:'Opens a shell inside the running container for advanced troubleshooting. Type exit to return.'},
+    ],
+    notes:[{type:'info',text:'ZTP enrollment typically completes within 10–30 seconds of the container starting. The CCV Center panel will update from Enrolling to Connected automatically.'}],
+  },
+  5:{
+    tasks:['t-ccv'],
+    objective:'Confirm the sensor appears and shows Connected status in Cyber Vision Center\'s Sensor Explorer.',
+    steps:['Open the Cyber Vision Center panel using the ⊞ button in the top-right','Locate docker-sensor-lab-01 in Sensor Explorer','Confirm Status shows Connected'],
+    statuses:[
+      {k:'Enrolling…',v:'Container started, ZTP in progress — normally completes in under 30 seconds'},
+      {k:'Connected',v:'Enrollment complete, certificate exchanged, sensor fully active'},
+      {k:'Disconnected',v:'Network or certificate issue — see troubleshooting below'},
+    ],
+    notes:[{type:'warn',text:'If the sensor stays Disconnected: check ping to Center, verify ca.crt is in the certs.d directory, and confirm "systemctl restart docker" ran after copying the cert.'}],
+  },
+  6:{
+    tasks:['t-post'],
+    objective:'Configure what the sensor should monitor after connecting to Center.',
+    steps:['Click the connected sensor in Sensor Explorer to open configuration','Under Network Interfaces, assign eth1 as the Capture interface','Under Active Discovery, enable if you want Center to actively probe OT devices','Under Monitored Subnets, add the OT network segments you want to discover'],
+    cmds:[{cmd:'docker compose logs --tail=50 ccv-sensor-1',desc:'Verify the sensor picked up configuration changes pushed from Center.'}],
+    notes:[
+      {type:'tip',text:'After configuring interfaces and subnets, generate some OT traffic. Assets and flows should appear in the Cyber Vision dashboard within minutes.'},
+      {type:'warn',text:'Active Discovery sends probes onto the OT network. Confirm with your OT team before enabling it in a production environment.'},
+    ],
+  },
+};
+
+
+// ────────────────────────────────────────────────
+//  STEP ACCORDION
+// ────────────────────────────────────────────────
+function toggleStep(n){
+  document.getElementById('sc'+n).classList.toggle('open');
+}
+
+// ────────────────────────────────────────────────
+//  CCV CENTER PANEL
+// ────────────────────────────────────────────────
+function toggleCcvPanel(){
+  S.ccvPanelOpen=!S.ccvPanelOpen;
+  document.getElementById('ccvPanel').classList.toggle('hidden',!S.ccvPanelOpen);
+  document.getElementById('toggleCcv').classList.toggle('active',S.ccvPanelOpen);
+  if(S.ccvPanelOpen) updateCcvPanel();
+}
+function openCcvVerify(){
+  if(!S.ccvPanelOpen) toggleCcvPanel();
+  updateCcvPanel();
+  if(S.sensorStatus==='connected'){ completeTask('t-ccv'); toast('✔ Sensor verified Connected in Cyber Vision Center'); }
+  else if(S.containerUp) toast('Sensor still enrolling — wait a few seconds','info');
+  else toast('Start the sensor container first (Step 4)','err');
+}
+function openCcvConfig(){
+  if(!S.ccvPanelOpen) toggleCcvPanel();
+  if(S.sensorStatus==='connected'){ showCcvConfig(); completeTask('t-post'); toast('✔ Post-deployment configuration reviewed'); }
+  else toast('Sensor must be Connected before configuration','err');
+}
+function updateCcvPanel(){
+  const empty=document.getElementById('ccvEmpty'), list=document.getElementById('ccvSensorList'), nav=document.getElementById('ccvNav');
+  if(!nav) return;
+  nav.innerHTML='Admin → Sensors → <span>Sensor Explorer</span>';
+  if(!S.containerUp&&S.sensorStatus==='disconnected'){ empty.style.display='block'; list.style.display='none'; return; }
+  empty.style.display='none'; list.style.display='block';
+  const st={disconnected:{label:'Disconnected',cls:'disconnected'},pending:{label:'Enrolling…',cls:'pending'},connected:{label:'Connected',cls:'connected'}}[S.sensorStatus];
+  list.innerHTML=`
+    <div class="sensor-row ${S.sensorStatus==='connected'?'connected':''}">
+      <div class="sr-top"><div class="sr-icon">📦</div><div class="sr-name">docker-sensor-lab-01</div>
+        <span class="sr-status ${st.cls}"><span class="status-dot"></span>${st.label}</span></div>
+      <div class="sr-meta">
+        <div class="sr-meta-item">Type: <span>Docker</span></div><div class="sr-meta-item">Version: <span>${S.sensorStatus==='connected'?'5.1.2':'—'}</span></div>
+        <div class="sr-meta-item">Host: <span>192.168.10.50</span></div><div class="sr-meta-item">Container: <span>ccv-sensor-1</span></div>
+        <div class="sr-meta-item">Token: <span>8f3a-bc29-e701</span></div><div class="sr-meta-item">Last seen: <span>${S.sensorStatus==='connected'?'just now':'—'}</span></div>
+      </div>
+      ${S.sensorStatus==='connected'?`<div style="margin-top:8px;display:flex;gap:6px">
+        <button onclick="showCcvConfig()" style="flex:1;padding:4px;background:#1c2d47;border:1px solid #30363d;border-radius:4px;color:#58a6ff;font-size:10px;cursor:pointer">⚙ Configure</button>
+        <button onclick="showSensorLogs()" style="flex:1;padding:4px;background:#1c2d47;border:1px solid #30363d;border-radius:4px;color:#8b949e;font-size:10px;cursor:pointer">📋 Logs</button>
+      </div>`:''}
+    </div>
+    ${S.sensorStatus==='pending'?`<div style="margin-top:8px;font-size:11px;color:#e3b341;text-align:center">⏳ Waiting for ZTP enrollment to complete…</div>`:''}
+    ${S.sensorStatus==='disconnected'&&S.containerUp?`<div style="margin-top:10px;padding:8px;background:#3b1219;border:1px solid #f8514933;border-radius:6px;font-size:11px;color:#f85149">
+      <strong>Troubleshooting</strong><br>• ping center162.sentryo.local<br>• ls /etc/docker/certs.d/center162.sentryo.local:443/<br>• sudo systemctl restart docker</div>`:''}
+  `;
+  if(S.sensorStatus==='connected') completeTask('t-ccv');
+}
+function showCcvConfig(){
+  document.getElementById('ccvNav').innerHTML='Admin → Sensors → <span>docker-sensor-lab-01</span>';
+  document.getElementById('ccvBody').innerHTML=`
+    <div class="ccv-section-title">Sensor Configuration — docker-sensor-lab-01</div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+      <span class="sr-status connected"><span class="status-dot"></span>Connected</span>
+      <span style="font-size:11px;color:#6e7681">Version 5.1.2 · Container ccv-sensor-1</span>
+    </div>
+    <div class="ccv-section-title">Network Interfaces</div>
+    <table style="width:100%;font-size:11px;border-collapse:collapse;margin-bottom:12px">
+      <tr><th style="text-align:left;padding:6px 8px;color:#8b949e;border-bottom:1px solid #30363d">Interface</th><th style="text-align:left;padding:6px 8px;color:#8b949e;border-bottom:1px solid #30363d">Role</th><th style="text-align:left;padding:6px 8px;color:#8b949e;border-bottom:1px solid #30363d">Status</th></tr>
+      <tr><td style="padding:7px 8px;border-bottom:1px solid #21262d;color:#c9d1d9">eth0</td><td style="padding:7px 8px;border-bottom:1px solid #21262d;color:#c9d1d9">Management</td><td style="padding:7px 8px;border-bottom:1px solid #21262d"><span style="color:#3fb950">●</span> Active</td></tr>
+      <tr><td style="padding:7px 8px;color:#c9d1d9">eth1</td><td style="padding:7px 8px;color:#c9d1d9">Capture (Passive)</td><td style="padding:7px 8px"><span style="color:#e3b341">●</span> Unconfigured</td></tr>
+    </table>
+    <div class="ccv-section-title">Active Discovery</div>
+    <div style="padding:8px;background:#0d1829;border:1px solid #1c2d47;border-radius:5px;font-size:11px;color:#6e7681;margin-bottom:10px">
+      <strong style="color:#e3b341">Disabled</strong>
+      <br><br><label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:#c9d1d9"><input type="checkbox" onchange="enableAD(this)" style="cursor:pointer"> Enable Active Discovery</label>
+    </div>
+    <div class="ccv-section-title">Monitored Subnets</div>
+    <div style="padding:8px;background:#0d1829;border:1px solid #1c2d47;border-radius:5px;font-size:11px;color:#8b949e;margin-bottom:10px">No subnets configured.<div style="margin-top:4px;font-family:monospace;color:#484f58">e.g. 192.168.20.0/24</div></div>
+    <button onclick="returnToExplorer()" style="width:100%;padding:6px;background:#21262d;border:1px solid #30363d;border-radius:5px;color:#8b949e;font-size:11px;cursor:pointer">← Back to Sensor Explorer</button>`;
+}
+function enableAD(cb){ if(cb.checked) toast('Active Discovery enabled on docker-sensor-lab-01','ok'); }
+function showSensorLogs(){
+  document.getElementById('ccvBody').innerHTML=`
+    <div class="ccv-section-title">Sensor Logs — docker-sensor-lab-01</div>
+    <div style="font-family:monospace;font-size:10px;color:#8b949e;line-height:1.6;background:#0a0f16;padding:10px;border-radius:5px;border:1px solid #1c2d47">
+      [08:34:01] INFO  CCV Sensor v5.1.2 starting<br>[08:34:02] INFO  Provisioning token loaded<br>[08:34:02] INFO  Connecting TLS → center162.sentryo.local:443<br>[08:34:03] INFO  TLS handshake OK (TLS 1.3)<br>
+      [08:34:04] <span style="color:#3fb950">INFO  ZTP enrollment accepted — ID a8f3d2c91b45</span><br>[08:34:05] <span style="color:#3fb950">INFO  Status: CONNECTED</span><br>[08:34:06] INFO  Capture interface: eth0 (passive)<br>[08:34:07] INFO  Waiting for traffic…
+    </div>
+    <button onclick="returnToExplorer()" style="width:100%;padding:6px;background:#21262d;border:1px solid #30363d;border-radius:5px;color:#8b949e;font-size:11px;cursor:pointer;margin-top:8px">← Back</button>`;
+}
+function returnToExplorer(){
+  document.getElementById('ccvNav').innerHTML='Admin → Sensors → <span>Sensor Explorer</span>';
+  document.getElementById('ccvBody').innerHTML=`
+    <div class="ccv-section-title">Sensor Explorer</div>
+    <div class="ccv-empty" id="ccvEmpty" style="${S.containerUp?'display:none':''}"><div class="ico">📡</div><p>No sensor containers detected yet.<br>Complete Step 4 to see the sensor register here.</p></div>
+    <div id="ccvSensorList" style="${S.containerUp?'':'display:none'}"></div>`;
+  updateCcvPanel();
+}
+
+// ────────────────────────────────────────────────
+//  SIDEBAR RESIZE
+// ────────────────────────────────────────────────
+(function initResize(){
+  const handle=document.getElementById('sidebarResize'), sidebar=document.getElementById('sidebar');
+  let dragging=false, startX=0, startW=0;
+  handle.addEventListener('mousedown',e=>{ dragging=true; startX=e.clientX; startW=sidebar.offsetWidth; handle.classList.add('dragging'); document.body.style.cursor='col-resize'; document.body.style.userSelect='none'; });
+  document.addEventListener('mousemove',e=>{ if(!dragging) return; sidebar.style.width=Math.min(540,Math.max(180,startW+(e.clientX-startX)))+'px'; });
+  document.addEventListener('mouseup',()=>{ if(!dragging) return; dragging=false; handle.classList.remove('dragging'); document.body.style.cursor=''; document.body.style.userSelect=''; });
+})();
+
+// ────────────────────────────────────────────────
+//  SAVE / LOAD / RESUME
+// ────────────────────────────────────────────────
+function saveTasks(){ localStorage.setItem(LS_TASKS,JSON.stringify([...S.completedTasks])); }
+function loadSavedTasks(){
+  try{ const raw=localStorage.getItem(LS_TASKS); if(!raw) return null; const arr=JSON.parse(raw); return (Array.isArray(arr)&&arr.length>0)?arr:null; }catch(e){ return null; }
+}
+function applyRestoredTasks(arr){
+  arr.forEach(id=>{ const el=document.getElementById(id); if(el){ S.completedTasks.add(id); el.classList.add('done'); const chk=el.querySelector('.chk'); if(chk) chk.textContent='✓'; } });
+  updateProgress();
+  [1,2,3,4,5,6].forEach(n=>{ const card=document.getElementById('sc'+n), num=document.getElementById('sn'+n); if(!card) return; const tasks=[...card.querySelectorAll('.task-row')].map(r=>r.id); if(tasks.length&&tasks.every(t=>S.completedTasks.has(t))){ card.classList.add('done'); if(num){ num.classList.remove('active'); num.classList.add('done'); } } });
+}
+function showResumeModal(saved){
+  document.getElementById('resumeCount').textContent=saved.length;
+  document.getElementById('resumeBar').style.width=Math.round(saved.length/TOTAL_TASKS*100)+'%';
+  document.getElementById('resumeModal').style.display='flex';
+}
+function resumeLab(){ document.getElementById('resumeModal').style.display='none'; if(!localStorage.getItem(LS_TOUR)) startTour(); }
+function startOver(){
+  localStorage.removeItem(LS_TASKS);
+  document.querySelectorAll('.task-row').forEach(r=>{ r.classList.remove('done'); const chk=r.querySelector('.chk'); if(chk) chk.textContent=''; });
+  document.querySelectorAll('.step-card').forEach(c=>c.classList.remove('done'));
+  document.querySelectorAll('.step-num').forEach(n=>n.classList.remove('done'));
+  S.completedTasks.clear(); updateProgress();
+  document.getElementById('resumeModal').style.display='none';
+  if(!localStorage.getItem(LS_TOUR)) startTour();
+}
+
+// ────────────────────────────────────────────────
+//  TOUR
+// ────────────────────────────────────────────────
+const TOUR_STEPS=[
+  {target:'#tourLaunchBtn',title:'Welcome to the Lab',desc:'This tour walks through the key controls. The ? button restarts it at any time.',arrow:'arrow-bottom',align:'right-of-bottom-left'},
+  {target:'.overlay-topbar',title:'Lab Overlay Panel',desc:'The left panel is a lab overlay — it sits on top of the simulated Ubuntu environment to guide you. The cyan accent and "Lab Overlay" badge distinguish it from the real system.',arrow:'arrow-left',align:'right'},
+{target:'#sc1',title:'Step Cards',desc:'Each step card tracks the tasks for that phase. Click the header to expand or collapse it.',arrow:'arrow-left',align:'right'},
+  {target:'#termInput',title:'Real System Terminal',desc:'This is the simulated Ubuntu terminal — no lab chrome, no hints. Type commands directly, use hint buttons from the sidebar to insert them, or press Tab to autocomplete.',arrow:'arrow-bottom',align:'above'},
+  {target:'#toggleCcv',title:'Cyber Vision Center',desc:'Opens the simulated Cisco Cyber Vision Center web interface. Watch your sensor appear and transition to Connected as you progress through the deployment.',arrow:'arrow-top-right',align:'below-left'},
+];
+let tourStep=0;
+function startTour(){
+  tourStep=0; document.getElementById('tourOverlay').classList.add('active');
+  document.getElementById('tourSpotlight').style.display='block'; document.getElementById('tourBubble').style.display='block';
+  buildDots(); showTourStep(0);
+}
+function buildDots(){
+  const c=document.getElementById('tourDots'); c.innerHTML='';
+  TOUR_STEPS.forEach((_,i)=>{ const d=document.createElement('div'); d.className='tour-dot'+(i===0?' active':''); d.id='tdot'+i; c.appendChild(d); });
+}
+function showTourStep(idx){
+  const step=TOUR_STEPS[idx], target=document.querySelector(step.target);
+  const spot=document.getElementById('tourSpotlight'), bubble=document.getElementById('tourBubble');
+  const isLast=idx===TOUR_STEPS.length-1;
+  document.querySelectorAll('.tour-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+  document.getElementById('tourStepLabel').textContent='Step '+(idx+1)+' of '+TOUR_STEPS.length;
+  document.getElementById('tourTitle').textContent=step.title;
+  document.getElementById('tourDesc').textContent=step.desc;
+  document.getElementById('tourPrev').style.display=idx===0?'none':'';
+  const next=document.getElementById('tourNext'), skip=document.querySelector('.tour-skip');
+  if(isLast){ next.textContent='Start the Lab'; next.className='tour-btn finish'; next.style.flex='1'; if(skip) skip.style.display='none'; }
+  else { next.textContent='Next'; next.className='tour-btn primary'; next.style.flex=''; if(skip) skip.style.display=''; }
+  if(!target){ positionBubbleCenter(); return; }
+  const r=target.getBoundingClientRect(), pad=6;
+  spot.style.cssText=`left:${r.left-pad}px;top:${r.top-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px;display:block`;
+  bubble.className='tour-bubble '+step.arrow;
+  const bw=320,bpad=12,vw=window.innerWidth,vh=window.innerHeight;
+  let left,top,bottom='';
+  if(step.align==='right'){left=r.right+14;top=r.top;}
+  else if(step.align==='right-of-bottom-left'){left=r.left-10;top=null;bottom=vh-r.top+14;}
+  else if(step.align==='above'){left=r.left;top=null;bottom=vh-r.top+14;}
+  else if(step.align==='above-right'){left=r.right-bw;top=null;bottom=vh-r.top+14;}
+  else if(step.align==='below-left'){left=r.right-bw;top=r.bottom+14;}
+  else{left=r.right-bw;top=r.top;}
+  if(left!=null) left=Math.min(Math.max(bpad,left),vw-bw-bpad);
+  if(top!=null) top=Math.min(Math.max(bpad,top),vh-200);
+  bubble.style.left=(left??bpad)+'px'; bubble.style.top=top!=null?top+'px':''; bubble.style.bottom=bottom?bottom+'px':''; bubble.style.transform='';
+}
+function positionBubbleCenter(){ const b=document.getElementById('tourBubble'); b.style.cssText='left:50%;top:50%;transform:translate(-50%,-50%)'; }
+function tourNav(dir){ const n=tourStep+dir; if(n>=TOUR_STEPS.length){endTour();return;} if(n<0)return; tourStep=n; showTourStep(n); }
+function skipTour(){ endTour(); }
+function endTour(){ localStorage.setItem(LS_TOUR,'1'); document.getElementById('tourOverlay').classList.remove('active'); document.getElementById('tourSpotlight').style.display='none'; document.getElementById('tourBubble').style.display='none'; inp.focus(); }
+
+// ────────────────────────────────────────────────
+//  INIT
+// ────────────────────────────────────────────────
+(function init(){
+  lines(bootLines);
+  addPromptLine();
+  const origComplete=completeTask;
+  window.completeTask=function(id){ origComplete(id); saveTasks(); };
+  const saved=loadSavedTasks();
+  if(saved&&saved.length>0){ applyRestoredTasks(saved); showResumeModal(saved); }
+  else if(!localStorage.getItem(LS_TOUR)) startTour();
+  inp.focus();
+})();
+</script>
+</body>
+</html>
