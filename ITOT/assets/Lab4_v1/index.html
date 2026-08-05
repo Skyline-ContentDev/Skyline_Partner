@@ -1,0 +1,590 @@
+<!DOCTYPE html><html lang="en-US" dir="ltr"><head>
+<meta charset="UTF-8">
+<style id="mighty-reset-css">/* Basic reset - lowest priority */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; font-family: sans-serif; line-height: 1.5; }</style><meta name="viewport" content="initial-scale=1.0">
+<title>Lab 4 – Step Navigator</title>
+
+<link rel="stylesheet" type="text/css" href="player/rlplayer.css">
+<script type="text/javascript" src="player/rlplayer.js"></script>
+<script type="text/javascript" src="player/rlplayer.lang.en-US.js"></script>
+
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #1a1a2e;
+    color: #e0e0e0;
+    overflow: hidden;
+  }
+
+  /* ── Top bar ── */
+  #lab-topbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 32px;
+    background: rgba(13, 13, 32, 0.95);
+    border-bottom: 1px solid rgba(0, 188, 235, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 14px;
+    z-index: 9002;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  #lab-topbar a {
+    color: #00bceb;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 4px 12px;
+    border: 1px solid rgba(0, 188, 235, 0.45);
+    border-radius: 5px;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  #lab-topbar a:hover {
+    background: rgba(0, 188, 235, 0.18);
+    border-color: rgba(0, 188, 235, 0.9);
+    color: #fff;
+  }
+
+  /* AP container fills the viewport below the top bar */
+  #lqMz5QfJ.ap-prez-container {
+    position: fixed;
+    top: 33px;
+    left: 0; right: 0; bottom: 0;
+    width: 100%;
+    height: calc(100% - 33px);
+    overflow: hidden;
+    outline: none;
+    background: #000;
+  }
+
+  /* ── Show tab (when bar is hidden) ── */
+  #show-tab {
+    position: fixed;
+    bottom: 56px;
+    left: 16px;
+    background: rgba(13, 13, 32, 0.92);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid #00bceb;
+    border-radius: 8px;
+    color: #00bceb;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    cursor: pointer;
+    z-index: 1000;
+    display: none;
+    user-select: none;
+  }
+  #show-tab:hover { background: rgba(0,188,235,0.15); }
+
+  /* ── Card ── */
+  #bar {
+    position: fixed;
+    bottom: 56px;
+    left: 16px;
+    width: var(--bar-w, 280px);
+    min-width: 200px;
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    border: 1.5px solid rgba(0,188,235,0.6);
+    overflow: hidden;
+    z-index: 999;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,188,235,0.1);
+    cursor: grab;
+    user-select: none;
+  }
+  /* Clip the children so the progress line and rounded corners look right */
+  #bar > #bar-title-row { border-top-left-radius: 12px; border-top-right-radius: 12px; }
+  #bar > #bar-nav       { border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; }
+
+  /* Right-edge resize grip (lives inside the bar so overflow:hidden doesn't clip it) */
+  #bar-resize {
+    position: absolute;
+    top: 0; right: 0; bottom: 0;
+    width: 8px;
+    cursor: ew-resize;
+    z-index: 3;
+  }
+  #bar-resize::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    right: 2px;
+    transform: translateY(-50%);
+    width: 4px; height: 36px;
+    border-left:  1px solid rgba(0, 188, 235, 0.55);
+    border-right: 1px solid rgba(0, 188, 235, 0.55);
+    border-radius: 2px;
+    transition: border-color 0.15s;
+  }
+  #bar-resize:hover::after { border-color: rgba(0, 188, 235, 1); }
+  #bar:active { cursor: grabbing; }
+  #bar.is-dragging { transition: none; }
+
+  #bar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    height: 2px;
+    width: var(--progress, 0%);
+    background: linear-gradient(90deg, #00bceb, #00e5c0);
+    transition: width 0.3s;
+    z-index: 1;
+    border-radius: 12px 0 0 0;
+  }
+
+  #bar-title-row {
+    background: rgba(13, 13, 32, 0.92);
+    padding: 10px 14px 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(0,188,235,0.15);
+  }
+  #bar-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: #00bceb;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .icon-btn {
+    background: rgba(30, 30, 64, 0.6);
+    border: 1px solid rgba(0, 188, 235, 0.25);
+    color: #c0c0d8;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+  .icon-btn:hover {
+    background: rgba(0, 188, 235, 0.85);
+    color: #fff;
+    border-color: rgba(0, 188, 235, 1);
+  }
+
+  #bar-counter-row {
+    background: rgba(13, 13, 32, 0.92);
+    padding: 2px 14px 10px;
+  }
+  #step-counter { font-size: 11px; color: #6a7090; }
+
+  #bar-content {
+    background: rgba(10, 10, 30, 0.82);
+    padding: 12px 14px;
+  }
+  #step-display {
+    font-size: 13px;
+    line-height: 1.55;
+    color: #ffffff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  }
+  #step-display strong { color: #00bceb; font-weight: 600; }
+  #step-display.fade {
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.15s, transform 0.15s;
+  }
+  #step-display.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  #bar-nav {
+    background: rgba(13, 13, 32, 0.92);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid rgba(0,188,235,0.15);
+  }
+  .nav-btn {
+    flex: 1;
+    background: rgba(30, 30, 64, 0.8);
+    border: 1px solid #2a2a50;
+    color: #c0c0d8;
+    border-radius: 7px;
+    padding: 7px 10px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    text-align: center;
+  }
+  .nav-btn:hover:not(:disabled) {
+    background: #00bceb;
+    color: #fff;
+    border-color: #00bceb;
+  }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+  #btn-complete {
+    flex: 1;
+    background: rgba(26, 122, 80, 0.8);
+    border-color: #1a7a50;
+    color: #fff;
+    display: none;
+  }
+  #btn-complete:hover { background: #22a06b; border-color: #22a06b; }
+
+  @keyframes glowPulse {
+    0%   { box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,188,235,0.1); border-color: rgba(0,188,235,0.6); }
+    50%  { box-shadow: 0 0 16px 3px rgba(0,188,235,0.45), 0 0 0 1px rgba(0,188,235,0.55); border-color: rgba(0,188,235,0.9); }
+    100% { box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,188,235,0.1); border-color: rgba(0,188,235,0.6); }
+  }
+  #bar.glow { animation: glowPulse 1.1s ease-in-out; }
+
+  #step-display.complete-msg { color: #ffffff; }
+  #step-display.complete-msg::first-letter { color: #00e5c0; }
+</style>
+<script id="mighty-interactive-sdk" src="../../mighty/sdk/v1/mighty-interactive-sdk.min.js"></script></head>
+<body>
+
+<!-- Top bar -->
+<div id="lab-topbar">
+  <a href="javascript:void(0)" onclick="openInNewTab()" title="Open lab in a new browser tab">↗ Open in new tab</a>
+</div>
+
+<!-- ActivePresenter player (embedded directly, no iframe) -->
+<div id="lqMz5QfJ" class="ap-prez-container" lang="en-US" dir="ltr">
+  <script type="text/javascript">
+    AtomiAP.open("rlprez.js", "lqMz5QfJ", {
+      playMode: "Tutorial",
+      preloader: {zIndex: 2,diameter: 60,density: 9,range: 1000,speed: 1,color:'#2090E6',shape:'oval'}
+    });
+  </script>
+</div>
+
+<div id="show-tab" onclick="showBar()">Lab Steps</div>
+
+<div id="bar">
+  <div id="bar-resize" title="Drag to resize"></div>
+  <div id="bar-title-row">
+    <span id="bar-title">Lab Steps</span>
+    <button class="icon-btn" title="Minimize" onclick="hideBar(event)" aria-label="Minimize">−</button>
+  </div>
+
+  <div id="bar-counter-row">
+    <span id="step-counter">Welcome</span>
+  </div>
+
+  <div id="bar-content">
+    <div id="step-display" class="visible"></div>
+  </div>
+
+  <div id="bar-nav">
+    <button class="nav-btn" id="btn-prev" onclick="prevStep(event)" disabled="">← Prev</button>
+    <button class="nav-btn" id="btn-next" onclick="nextStep(event)">Next →</button>
+    <button class="nav-btn" id="btn-complete" onclick="completeAll(event)">✓ Done</button>
+  </div>
+</div>
+
+<script>
+// Step 0 = Welcome (no action). Steps 1–8 are the lab actions.
+const STEPS = [
+  { label: "Welcome",  text: "Welcome to <strong>Cisco Cyber Vision Center</strong>. This lab walks you through reviewing and resolving baseline differences. If you need a hint at any time, select the <strong>?</strong> in the lower-right corner of the lab to reveal a navigation arrow." },
+  { label: "Step 1",   text: "Select <strong>Events</strong> in the left navigation panel. The Events page shows severity rings for Critical, High, Medium, and Low. Select the <strong>Inventory Event</strong> portion of the high severity ring to drill in." },
+  { label: "Step 2",   text: "The event list is filtered to high severity inventory events. Select the event row to expand it and review the new-component details (device identification, IP, tags). Then select <strong>Events</strong> in the left navigation panel to return." },
+  { label: "Step 3",   text: "Select the <strong>Anomaly Detection</strong> portion of the high severity ring. Four events appear which are all baseline differences in Delta V and Web Activity. Select the first event to expand it, then select <strong>Monitor</strong> in the left navigation panel." },
+  { label: "Step 4",   text: "A baseline is a snapshot of a preset that represents the network's known state, and monitor mode flags deviations. Select the <strong>Web Activities</strong> preset card. New components appear in red. Select the first new component row, then in the detail panel select <strong>Investigate with flows</strong>." },
+  { label: "Step 5",   text: "Review the flows: this component communicated over port 80 using TCP, with tags including <strong>Insecure</strong>, <strong>Web</strong>, and <strong>HTTP</strong>. Select <strong>Show details</strong>. The <strong>Web Server</strong> tag is marked New. Select <strong>Acknowledge component</strong>, choose <strong>acknowledge and keep warning</strong>, and select <strong>Continue</strong>." },
+  { label: "Step 6",   text: "Now resolve a DeltaV difference. Select <strong>Monitor</strong> in the left navigation panel, then the <strong>DeltaV</strong> preset card. The new activity appears at the top in red. Select the new activity row." },
+  { label: "Step 7",   text: "The detail panel shows the two components involved and the activity tags. Select <strong>Acknowledge activity</strong>, choose <strong>acknowledge and keep warning</strong>, and select <strong>Continue</strong>." },
+  { label: "Step 8",   text: "Select <strong>Events</strong> in the left navigation panel. The acknowledgments you made were recorded as Medium-severity configuration events. Select the <strong>Medium</strong> severity ring to see them, then select <strong>Lab Complete</strong> to finish." }
+];
+
+// ── Slide → Step mapping ─────────────────────────────────────
+// Lab4 has 26 slides. Mapping (1-based slides → STEPS index):
+//   1–2 Welcome (0)  | 3–4 Step1 (1)   | 5–6 Step2 (2)   | 7–9 Step3 (3)
+//   10–12 Step4 (4) | 13–16 Step5 (5) | 17–19 Step6 (6) | 20–22 Step7 (7)
+//   23–25 Step8 (8) | 26 Complete
+// Triggers below are 0-based slideIndex values.
+const STEP_TRIGGERS = [0, 2, 4, 6, 9, 12, 16, 19, 22];
+const COMPLETE_SLIDE = 25; // 0-based (slide 26 — closing message)
+
+function slideIndexToStep(slideIndex) {
+  let step = 0;
+  for (let i = 0; i < STEP_TRIGGERS.length; i++) {
+    if (slideIndex >= STEP_TRIGGERS[i]) step = i;
+    else break;
+  }
+  return step;
+}
+
+let current = 0;
+let done    = new Set();
+let lastSlideIndex = -1;
+let ignoreUntil = 0;
+
+// ── AP presentation handle ───────────────────────────────────
+let _apPrez = null;
+function getAP() {
+  if (_apPrez) return _apPrez;
+  try {
+    const arr = window.AtomiAP && AtomiAP.presentations;
+    if (arr && arr.length > 0) { _apPrez = arr[0]; return _apPrez; }
+  } catch (e) {}
+  return null;
+}
+
+// One-step nav: prefer clicking the AP toolbar button (respects Tutorial mode
+// gating), fall back to the API.
+function apNavOnce(dir) {
+  try {
+    const btn = document.querySelector(dir > 0 ? '.ap-tool-next' : '.ap-tool-prev');
+    if (btn) { btn.click(); return true; }
+  } catch (e) {}
+  try {
+    const p = getAP();
+    if (p) {
+      if (dir > 0 && typeof p.nextSlide === 'function')     { p.nextSlide();     return true; }
+      if (dir < 0 && typeof p.previousSlide === 'function') { p.previousSlide(); return true; }
+    }
+  } catch (e) {}
+  return false;
+}
+
+// Jump to an absolute slide index.
+function gotoLabSlide(targetSlide) {
+  const p = getAP();
+  if (!p) return false;
+  const currentSlide = (typeof p.slideIndex === 'number') ? p.slideIndex : null;
+  if (currentSlide === null || targetSlide === currentSlide) return true;
+
+  const delta = targetSlide - currentSlide;
+  ignoreUntil = Date.now() + Math.abs(delta) * 250 + 800;
+
+  // Direct jump first
+  try {
+    if (typeof p.showSlide === 'function') { p.showSlide(targetSlide); return true; }
+  } catch (e) {}
+
+  // Staggered prev/next clicks as fallback
+  const dir = delta > 0 ? 1 : -1;
+  for (let i = 0; i < Math.abs(delta); i++) {
+    setTimeout(() => apNavOnce(dir), i * 130);
+  }
+  return true;
+}
+
+function render(animate = false) {
+  const display = document.getElementById('step-display');
+  const total   = STEPS.length;
+  const isLast  = current === total - 1;
+  const isComplete = done.size === total;
+
+  document.getElementById('step-counter').textContent =
+    isComplete ? 'Complete!' : STEPS[current].label;
+  document.getElementById('btn-prev').disabled = current === 0 && !isComplete;
+  document.getElementById('btn-next').style.display = isComplete ? 'none' : '';
+  document.getElementById('btn-next').innerHTML = 'Next &#8594;';
+  document.getElementById('btn-complete').style.display = 'none';
+  document.getElementById('bar').style.setProperty('--progress', (done.size / total * 100) + '%');
+
+  const newText = isComplete
+    ? '&#10004; Great job. The Events page, Monitor mode, and the acknowledge workflow are your core tools for detecting, investigating, and resolving network behavior changes against a baseline.'
+    : STEPS[current].text;
+  const newClass = isComplete ? 'complete-msg' : '';
+
+  if (animate) {
+    display.className = 'fade';
+    bar.classList.remove('glow');
+    void bar.offsetWidth;
+    bar.classList.add('glow');
+    bar.addEventListener('animationend', () => {
+      bar.classList.remove('glow');
+    }, { once: true });
+    setTimeout(() => {
+      display.innerHTML = newText;
+      display.className = newClass + ' visible';
+    }, 150);
+  } else {
+    display.innerHTML = newText;
+    display.className = newClass + ' visible';
+  }
+
+  document.getElementById('bar').classList.toggle('complete', isComplete);
+}
+
+function prevStep(e) {
+  e && e.stopPropagation();
+  const isComplete = done.size === STEPS.length;
+  if (isComplete) {
+    // Back out of the complete state and land on the last step.
+    done.delete(STEPS.length - 1);
+    gotoLabSlide(STEP_TRIGGERS[current]);
+    render(true);
+    return;
+  }
+  if (current > 0) {
+    done.delete(current);
+    current--;
+    gotoLabSlide(STEP_TRIGGERS[current]);
+    render(true);
+  }
+}
+
+function nextStep(e) {
+  e && e.stopPropagation();
+  if (current < STEPS.length - 1) {
+    done.add(current);
+    current++;
+    gotoLabSlide(STEP_TRIGGERS[current]);
+    render(true);
+  } else {
+    // On the last step: Next completes the lab.
+    completeAll(e);
+  }
+}
+
+function completeAll(e) {
+  e && e.stopPropagation();
+  done.add(current);
+  gotoLabSlide(COMPLETE_SLIDE);
+  render(true);
+}
+
+function hideBar(e) {
+  e && e.stopPropagation();
+  document.getElementById('bar').style.display = 'none';
+  document.getElementById('show-tab').style.display = 'block';
+}
+
+function showBar() {
+  document.getElementById('bar').style.display = 'flex';
+  document.getElementById('show-tab').style.display = 'none';
+}
+
+// ── Drag ─────────────────────────────────────────────────────
+const bar = document.getElementById('bar');
+let dragging = false, startX, startY, origLeft, origBottom;
+
+bar.addEventListener('mousedown', e => {
+  if (e.target.tagName === 'BUTTON') return;
+  if (e.target.id === 'bar-resize') return;
+  dragging = true;
+  const rect = bar.getBoundingClientRect();
+  startX = e.clientX;
+  startY = e.clientY;
+  origLeft   = rect.left;
+  origBottom = window.innerHeight - rect.bottom;
+  bar.classList.add('is-dragging');
+  bar.style.transform = 'none';
+  bar.style.left   = origLeft + 'px';
+  bar.style.bottom = origBottom + 'px';
+  e.preventDefault();
+});
+
+document.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  let x = origLeft   + (e.clientX - startX);
+  let y = origBottom - (e.clientY - startY);
+  x = Math.max(0, Math.min(window.innerWidth  - bar.offsetWidth,  x));
+  y = Math.max(0, Math.min(window.innerHeight - bar.offsetHeight, y));
+  bar.style.left   = x + 'px';
+  bar.style.bottom = y + 'px';
+});
+
+document.addEventListener('mouseup', () => {
+  if (!dragging) return;
+  dragging = false;
+  bar.classList.remove('is-dragging');
+});
+
+// ── Resize (right-edge handle) ────────────────────────────────
+const resizeHandle = document.getElementById('bar-resize');
+let resizing = false, rStartX = 0, rStartW = 0;
+resizeHandle.addEventListener('mousedown', e => {
+  resizing = true;
+  rStartX = e.clientX;
+  rStartW = bar.offsetWidth;
+  e.preventDefault();
+  e.stopPropagation();
+});
+document.addEventListener('mousemove', e => {
+  if (!resizing) return;
+  const newW = Math.min(640, Math.max(200, rStartW + (e.clientX - rStartX)));
+  bar.style.setProperty('--bar-w', newW + 'px');
+});
+document.addEventListener('mouseup', () => { resizing = false; });
+
+// ── Lab → overlay sync (poll slideIndex) ──────────────────────
+// Wait for AP's slideIndex to settle on a real (non-negative) value before
+// calibrating, otherwise the initial -1 → 0 transition shifts the overlay
+// one step ahead permanently. (Lesson learned from CyKor labs.)
+let lastSlideIdx = null;
+setInterval(() => {
+  if (Date.now() < ignoreUntil) return;
+  const p = getAP();
+  if (!p || typeof p.slideIndex !== 'number') return;
+  const idx = p.slideIndex;
+  if (idx < 0) { lastSlideIdx = null; return; }
+  if (idx === lastSlideIdx) return;
+  lastSlideIdx = idx;
+
+  if (idx >= COMPLETE_SLIDE) {
+    if (done.size === STEPS.length) return; // already in Complete state — skip the re-render flash
+    STEPS.forEach((_, i) => done.add(i));
+    current = STEPS.length - 1;
+    render(true);
+    return;
+  }
+  const mappedStep = slideIndexToStep(idx);
+  if (mappedStep !== current) {
+    for (let i = current; i < mappedStep; i++) done.add(i);
+    current = mappedStep;
+    render(true);
+  }
+}, 250);
+
+// ── Open in new tab (preserve current slide via URL hash) ─────
+function openInNewTab() {
+  const p = getAP();
+  const idx = (p && typeof p.slideIndex === 'number' && p.slideIndex >= 0) ? p.slideIndex : 0;
+  const url = location.href.split('#')[0] + '#slide=' + idx;
+  window.open(url, '_blank');
+}
+
+// On load, if URL has #slide=N, jump there once AP is ready.
+(function resumeFromHash() {
+  const m = location.hash.match(/slide=(\d+)/);
+  if (!m) return;
+  const target = parseInt(m[1], 10);
+  const waitForAP = setInterval(() => {
+    const p = getAP();
+    if (p && typeof p.slideIndex === 'number' && p.slideIndex >= 0) {
+      clearInterval(waitForAP);
+      setTimeout(() => gotoLabSlide(target), 250);
+    }
+  }, 150);
+  setTimeout(() => clearInterval(waitForAP), 15000); // give up after 15s
+})();
+
+render();
+</script>
+
+
+<link rel="stylesheet" href="../../mighty/mighty-additional-fonts.css"><link rel="stylesheet" href="../../mighty/mighty-global-styles.css"><link rel="stylesheet" href="../../mighty/mighty-interactive-body-font.css"></body></html>

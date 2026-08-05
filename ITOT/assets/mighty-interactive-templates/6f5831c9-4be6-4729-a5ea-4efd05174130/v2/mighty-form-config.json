@@ -1,0 +1,227 @@
+{
+  "version": 1,
+  "name": "Four Item Hover and Click",
+  "formElements": [
+    {
+      "type": "message",
+      "message": "Edit the four cards below. Each card has a title, description (revealed on hover or click), and an icon.",
+      "appearance": "info"
+    },
+    {
+      "type": "panel",
+      "headerTitle": "Card 1",
+      "expandable": true,
+      "collapsed": false,
+      "formElements": [
+        {
+          "type": "selector-input",
+          "formKey": "card1Icon",
+          "label": "Icon",
+          "labelPosition": "top",
+          "options": [
+            { "label": "Wrench (repair/resolve)", "value": "wrench" },
+            { "label": "Magnifying Glass (search/identify)", "value": "magnifying-glass" },
+            { "label": "People (collaboration/teams)", "value": "people" },
+            { "label": "Clock (time/reduce downtime)", "value": "clock" },
+            { "label": "Shield (security/protect)", "value": "shield" },
+            { "label": "Chart (data/analytics)", "value": "chart" },
+            { "label": "Gear (settings/configure)", "value": "gear" },
+            { "label": "Network (connectivity/infrastructure)", "value": "network" },
+            { "label": "Refresh (cycle/refresh)", "value": "refresh" },
+            { "label": "Heartbeat (health/monitoring)", "value": "heartbeat" },
+            { "label": "Eye (visibility/observe)", "value": "eye" },
+            { "label": "Chat (support/messaging)", "value": "chat" },
+            { "label": "Monitor (computer/workstation)", "value": "monitor" }
+          ]
+        },
+        {
+          "type": "text-input",
+          "formKey": "card1Title",
+          "label": "Title",
+          "labelPosition": "top",
+          "placeholder": "e.g., Resolve Common Issues"
+        },
+        {
+          "type": "textarea-input",
+          "formKey": "card1Desc",
+          "label": "Description",
+          "labelPosition": "top",
+          "rows": 3,
+          "placeholder": "Text revealed on hover or click"
+        }
+      ]
+    },
+    {
+      "type": "panel",
+      "headerTitle": "Card 2",
+      "expandable": true,
+      "collapsed": true,
+      "formElements": [
+        {
+          "type": "selector-input",
+          "formKey": "card2Icon",
+          "label": "Icon",
+          "labelPosition": "top",
+          "options": [
+            { "label": "Wrench (repair/resolve)", "value": "wrench" },
+            { "label": "Magnifying Glass (search/identify)", "value": "magnifying-glass" },
+            { "label": "People (collaboration/teams)", "value": "people" },
+            { "label": "Clock (time/reduce downtime)", "value": "clock" },
+            { "label": "Shield (security/protect)", "value": "shield" },
+            { "label": "Chart (data/analytics)", "value": "chart" },
+            { "label": "Gear (settings/configure)", "value": "gear" },
+            { "label": "Network (connectivity/infrastructure)", "value": "network" },
+            { "label": "Refresh (cycle/refresh)", "value": "refresh" },
+            { "label": "Heartbeat (health/monitoring)", "value": "heartbeat" },
+            { "label": "Eye (visibility/observe)", "value": "eye" },
+            { "label": "Chat (support/messaging)", "value": "chat" },
+            { "label": "Monitor (computer/workstation)", "value": "monitor" }
+          ]
+        },
+        {
+          "type": "text-input",
+          "formKey": "card2Title",
+          "label": "Title",
+          "labelPosition": "top",
+          "placeholder": "e.g., Identify Root Causes"
+        },
+        {
+          "type": "textarea-input",
+          "formKey": "card2Desc",
+          "label": "Description",
+          "labelPosition": "top",
+          "rows": 3,
+          "placeholder": "Text revealed on hover or click"
+        }
+      ]
+    },
+    {
+      "type": "panel",
+      "headerTitle": "Card 3",
+      "expandable": true,
+      "collapsed": true,
+      "formElements": [
+        {
+          "type": "selector-input",
+          "formKey": "card3Icon",
+          "label": "Icon",
+          "labelPosition": "top",
+          "options": [
+            { "label": "Wrench (repair/resolve)", "value": "wrench" },
+            { "label": "Magnifying Glass (search/identify)", "value": "magnifying-glass" },
+            { "label": "People (collaboration/teams)", "value": "people" },
+            { "label": "Clock (time/reduce downtime)", "value": "clock" },
+            { "label": "Shield (security/protect)", "value": "shield" },
+            { "label": "Chart (data/analytics)", "value": "chart" },
+            { "label": "Gear (settings/configure)", "value": "gear" },
+            { "label": "Network (connectivity/infrastructure)", "value": "network" },
+            { "label": "Refresh (cycle/refresh)", "value": "refresh" },
+            { "label": "Heartbeat (health/monitoring)", "value": "heartbeat" },
+            { "label": "Eye (visibility/observe)", "value": "eye" },
+            { "label": "Chat (support/messaging)", "value": "chat" },
+            { "label": "Monitor (computer/workstation)", "value": "monitor" }
+          ]
+        },
+        {
+          "type": "text-input",
+          "formKey": "card3Title",
+          "label": "Title",
+          "labelPosition": "top",
+          "placeholder": "e.g., Improve Collaboration"
+        },
+        {
+          "type": "textarea-input",
+          "formKey": "card3Desc",
+          "label": "Description",
+          "labelPosition": "top",
+          "rows": 3,
+          "placeholder": "Text revealed on hover or click"
+        }
+      ]
+    },
+    {
+      "type": "panel",
+      "headerTitle": "Card 4",
+      "expandable": true,
+      "collapsed": true,
+      "formElements": [
+        {
+          "type": "selector-input",
+          "formKey": "card4Icon",
+          "label": "Icon",
+          "labelPosition": "top",
+          "options": [
+            { "label": "Wrench (repair/resolve)", "value": "wrench" },
+            { "label": "Magnifying Glass (search/identify)", "value": "magnifying-glass" },
+            { "label": "People (collaboration/teams)", "value": "people" },
+            { "label": "Clock (time/reduce downtime)", "value": "clock" },
+            { "label": "Shield (security/protect)", "value": "shield" },
+            { "label": "Chart (data/analytics)", "value": "chart" },
+            { "label": "Gear (settings/configure)", "value": "gear" },
+            { "label": "Network (connectivity/infrastructure)", "value": "network" },
+            { "label": "Refresh (cycle/refresh)", "value": "refresh" },
+            { "label": "Heartbeat (health/monitoring)", "value": "heartbeat" },
+            { "label": "Eye (visibility/observe)", "value": "eye" },
+            { "label": "Chat (support/messaging)", "value": "chat" },
+            { "label": "Monitor (computer/workstation)", "value": "monitor" }
+          ]
+        },
+        {
+          "type": "text-input",
+          "formKey": "card4Title",
+          "label": "Title",
+          "labelPosition": "top",
+          "placeholder": "e.g., Reduce Downtime"
+        },
+        {
+          "type": "textarea-input",
+          "formKey": "card4Desc",
+          "label": "Description",
+          "labelPosition": "top",
+          "rows": 3,
+          "placeholder": "Text revealed on hover or click"
+        }
+      ]
+    },
+    {
+      "type": "panel",
+      "headerTitle": "Colors",
+      "expandable": true,
+      "collapsed": true,
+      "formElements": [
+        {
+          "type": "color-input",
+          "formKey": "bgColor",
+          "label": "Background color",
+          "labelPosition": "top",
+          "isClearColorAvailable": true,
+          "helperText": "Clear to make the background transparent."
+        },
+        {
+          "type": "color-input",
+          "formKey": "cardColor",
+          "label": "Card color",
+          "labelPosition": "top"
+        },
+        {
+          "type": "color-input",
+          "formKey": "iconColor",
+          "label": "Icon color",
+          "labelPosition": "top"
+        },
+        {
+          "type": "color-input",
+          "formKey": "titleColor",
+          "label": "Heading color",
+          "labelPosition": "top"
+        },
+        {
+          "type": "color-input",
+          "formKey": "bodyColor",
+          "label": "Body text color",
+          "labelPosition": "top"
+        }
+      ]
+    }
+  ]
+}

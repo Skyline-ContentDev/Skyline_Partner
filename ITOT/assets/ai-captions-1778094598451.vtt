@@ -1,0 +1,277 @@
+WEBVTT
+
+0
+00:00:05.079 --> 00:00:08.289
+Modern manufacturing facilities run on two distinct networks.
+
+1
+00:00:09.539 --> 00:00:12.579
+The IT network supports business operations such as email,
+
+2
+00:00:12.699 --> 00:00:13.800
+enterprise systems,
+
+3
+00:00:13.979 --> 00:00:15.260
+and corporate applications.
+
+4
+00:00:16.010 --> 00:00:19.049
+The OT network runs the physical processes on the plant floor,
+
+5
+00:00:19.170 --> 00:00:19.719
+sensors,
+
+6
+00:00:19.969 --> 00:00:20.280
+controllers,
+
+7
+00:00:20.290 --> 00:00:20.969
+and machines.
+
+8
+00:00:22.659 --> 00:00:23.979
+Within the OT network,
+
+9
+00:00:24.219 --> 00:00:25.860
+devices are organized into levels,
+
+10
+00:00:25.940 --> 00:00:27.680
+each serving a specific function
+
+11
+00:00:28.059 --> 00:00:29.940
+with communication controlled between them.
+
+12
+00:00:30.829 --> 00:00:32.150
+In a well segmented network,
+
+13
+00:00:32.229 --> 00:00:34.909
+what is connected at each level is known and documented.
+
+14
+00:00:35.810 --> 00:00:37.659
+As IT and OT converge,
+
+15
+00:00:37.779 --> 00:00:40.799
+maintaining visibility into what is connected becomes complex.
+
+16
+00:00:42.450 --> 00:00:44.310
+At this industrial facility,
+
+17
+00:00:44.319 --> 00:00:45.630
+operations recently expanded,
+
+18
+00:00:45.930 --> 00:00:47.909
+bringing on new staff and new equipment.
+
+19
+00:00:48.450 --> 00:00:51.990
+Sam is an IT network engineer whose responsibilities now include
+
+20
+00:00:52.400 --> 00:00:53.650
+the OT network.
+
+21
+00:00:54.549 --> 00:00:56.979
+Sam pulls up the documented network topology.
+
+22
+00:00:57.389 --> 00:00:58.430
+According to the diagram,
+
+23
+00:00:58.509 --> 00:01:01.290
+there are 2,585 devices
+
+24
+00:01:01.509 --> 00:01:02.799
+on the OT network,
+
+25
+00:01:03.150 --> 00:01:04.209
+PLCs,
+
+26
+00:01:04.550 --> 00:01:05.540
+HMIs,
+
+27
+00:01:05.709 --> 00:01:06.379
+sensors,
+
+28
+00:01:06.620 --> 00:01:07.260
+historians,
+
+29
+00:01:07.349 --> 00:01:07.949
+and more
+
+30
+00:01:08.269 --> 00:01:10.750
+distributed across the levels of the control hierarchy.
+
+31
+00:01:11.610 --> 00:01:12.580
+As part of the expansion,
+
+32
+00:01:12.660 --> 00:01:15.260
+the facility has deployed Cisco Cyber Vision.
+
+33
+00:01:15.919 --> 00:01:18.230
+It automatically inventories what is connected to the
+
+34
+00:01:18.230 --> 00:01:21.160
+OT network and monitors how those devices communicate.
+
+35
+00:01:22.029 --> 00:01:23.910
+Sam connects it and lets it run.
+
+36
+00:01:25.419 --> 00:01:28.629
+Sam expected 2,585 devices.
+
+37
+00:01:29.019 --> 00:01:31.860
+Cybervision finds 2,603.
+
+38
+00:01:32.559 --> 00:01:37.199
+The extra 18 include an HVAC control unit with an active outbound connection
+
+39
+00:01:37.400 --> 00:01:38.550
+to an outside network,
+
+40
+00:01:38.839 --> 00:01:40.839
+a consumer device plugged into a break room
+
+41
+00:01:40.839 --> 00:01:43.199
+jack that traces back through the OT segment,
+
+42
+00:01:43.480 --> 00:01:46.800
+and several mobile devices generating traffic from the plant floor.
+
+43
+00:01:47.610 --> 00:01:50.069
+None of these belong at the levels where they were found.
+
+44
+00:01:50.610 --> 00:01:52.449
+In a properly segmented architecture,
+
+45
+00:01:52.690 --> 00:01:54.910
+devices in the OT zone should be there,
+
+46
+00:01:55.569 --> 00:01:57.569
+because they are part of the controlled process,
+
+47
+00:01:57.769 --> 00:02:00.690
+not because someone plugged something in and the network accepted it.
+
+48
+00:02:01.580 --> 00:02:04.750
+Standard IT monitoring tools would not have caught this.
+
+49
+00:02:05.290 --> 00:02:09.729
+IT discovery tools are built to query and interpret IT protocol responses,
+
+50
+00:02:09.929 --> 00:02:12.570
+but OT protocols run at the application layer
+
+51
+00:02:12.850 --> 00:02:15.809
+on top of standard Ethernet and IP infrastructure.
+
+52
+00:02:16.639 --> 00:02:18.389
+Cyber Vision works differently.
+
+53
+00:02:18.610 --> 00:02:22.720
+It performs deep packet inspection on traffic already flowing across the network,
+
+54
+00:02:23.119 --> 00:02:26.850
+building a complete picture without requiring devices to respond to queries.
+
+55
+00:02:27.779 --> 00:02:29.979
+That picture surfaces the problems.
+
+56
+00:02:31.110 --> 00:02:35.440
+The HVAC unit's outbound connection crosses the OT zone boundary.
+
+57
+00:02:35.839 --> 00:02:39.679
+The consumer device is inside a segment it has no business being in.
+
+58
+00:02:40.080 --> 00:02:43.110
+The mobile device traffic has no documented source.
+
+59
+00:02:43.479 --> 00:02:46.759
+These are exactly the kinds of zone boundary violations that the
+
+60
+00:02:46.759 --> 00:02:52.199
+IEC 62443 zones and conduits model is designed to prevent,
+
+61
+00:02:52.320 --> 00:02:54.899
+and visibility is what makes them actionable.
+
+62
+00:02:55.850 --> 00:02:57.850
+You can't secure what you can't see.
+
+63
+00:02:58.770 --> 00:03:01.229
+Knowing what is on the network is the starting point.
+
+64
+00:03:01.570 --> 00:03:03.770
+The next section goes deeper into the tools that
+
+65
+00:03:03.770 --> 00:03:07.240
+security teams use to gain visibility into OT networks.
+
+66
+00:03:07.589 --> 00:03:09.649
+Investigate what devices have been doing,
+
+67
+00:03:09.960 --> 00:03:12.000
+correlate activity across data sources,
+
+68
+00:03:12.009 --> 00:03:13.809
+and turn findings into response.

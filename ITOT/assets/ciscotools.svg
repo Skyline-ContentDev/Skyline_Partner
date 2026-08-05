@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_2" data-name="Layer 2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 697.02 599.16">
+  <g id="Layer_1-2" data-name="Layer 1">
+    <rect y="430.91" width="697.02" height="168.25" style="fill: #d2d7df;"/>
+    <text transform="translate(47.62 498.13)" style="font-family: Arial-BoldMT, Arial; font-size: 36px; font-weight: 700;"><tspan x="0" y="0">OT Floor</tspan></text>
+    <text transform="translate(49.34 533.28)" style="font-family: Arial-BoldMT, Arial; font-size: 24px; font-weight: 700;"><tspan x="0" y="0">Process/Cell</tspan><tspan x="144.08" y="0" style="letter-spacing: -.04em;"> </tspan><tspan x="149.86" y="0">Area</tspan></text>
+    <text transform="translate(51.19 564.52)" style="font-family: ArialMT, Arial; font-size: 24px;"><tspan x="0" y="0">Sensors, PLCs, SCAD</tspan><tspan x="240.08" y="0" style="letter-spacing: -.06em;">A</tspan><tspan x="254.77" y="0" xml:space="preserve"> sytems, etc.</tspan></text>
+    <rect width="697.02" height="168.25" style="fill: #d0f2fb;"/>
+    <g>
+      <text transform="translate(47.62 62.48)" style="font-family: Arial-BoldMT, Arial; font-size: 36px; font-weight: 700;"><tspan x="0" y="0">Enterprise Network</tspan></text>
+      <text transform="translate(49.35 97.62)" style="font-family: Arial-BoldMT, Arial; font-size: 24px; font-weight: 700;"><tspan x="0" y="0">IT Environment</tspan></text>
+      <text transform="translate(51.19 128.87)" style="font-family: ArialMT, Arial; font-size: 24px;"><tspan x="0" y="0">Servers, Cloud</tspan><tspan x="158.73" y="0" style="letter-spacing: -.06em;"> </tspan><tspan x="164.07" y="0">Applications, etc.</tspan></text>
+    </g>
+    <rect y="195.84" width="697.02" height="207.47" style="fill: #f5f7d0;"/>
+    <g>
+      <text transform="translate(48.67 249.35)" style="font-family: Arial-BoldMT, Arial; font-size: 36px; font-weight: 700;"><tspan x="0" y="0" style="letter-spacing: -.02em;">V</tspan><tspan x="23.36" y="0">isibilit</tspan><tspan x="127.37" y="0" style="letter-spacing: -.07em;">y</tspan><tspan x="144.72" y="0">, Polic</tspan><tspan x="250.75" y="0" style="letter-spacing: -.07em;">y</tspan><tspan x="268.1" y="0">, and Enforcement</tspan></text>
+      <text transform="translate(50.4 284.5)" style="font-family: Arial-BoldMT, Arial; font-size: 24px; font-weight: 700;"><tspan x="0" y="0">Cisco Cyber </tspan><tspan x="146.72" y="0" style="letter-spacing: -.02em;">V</tspan><tspan x="162.29" y="0">ision, Cisco ISE, Cisco Secure Firewall</tspan></text>
+      <text transform="translate(52.25 315.74)" style="font-family: ArialMT, Arial; font-size: 24px;"><tspan x="0" y="0">Deep packet inspection, asset inventor</tspan><tspan x="412.24" y="0" style="letter-spacing: -.07em;">y</tspan><tspan x="422.46" y="0">, threat </tspan><tspan x="0" y="28.8">detection, cloud-based analytics, secure </tspan><tspan x="0" y="57.6">connectivit</tspan><tspan x="113.39" y="57.6" style="letter-spacing: -.07em;">y</tspan><tspan x="123.61" y="57.6">, and context-based segmentation.</tspan></text>
+    </g>
+    <g>
+      <line x1="678.64" y1="144.06" x2="678.64" y2="218.54" style="fill: none; stroke: #20365d; stroke-miterlimit: 10; stroke-width: 2px;"/>
+      <polygon points="673.65 145.51 678.64 136.88 683.62 145.51 673.65 145.51" style="fill: #20365d;"/>
+      <polygon points="673.65 217.08 678.64 225.72 683.62 217.08 673.65 217.08" style="fill: #20365d;"/>
+    </g>
+    <g>
+      <line x1="678.64" y1="381.44" x2="678.64" y2="455.93" style="fill: none; stroke: #20365d; stroke-miterlimit: 10; stroke-width: 2px;"/>
+      <polygon points="673.65 382.9 678.64 374.27 683.62 382.9 673.65 382.9" style="fill: #20365d;"/>
+      <polygon points="673.65 454.47 678.64 463.11 683.62 454.47 673.65 454.47" style="fill: #20365d;"/>
+    </g>
+    <g>
+      <line x1="21.04" y1="144.06" x2="21.04" y2="218.54" style="fill: none; stroke: #20365d; stroke-miterlimit: 10; stroke-width: 2px;"/>
+      <polygon points="16.06 145.51 21.04 136.88 26.03 145.51 16.06 145.51" style="fill: #20365d;"/>
+      <polygon points="16.06 217.08 21.04 225.72 26.03 217.08 16.06 217.08" style="fill: #20365d;"/>
+    </g>
+    <g>
+      <line x1="21.04" y1="381.44" x2="21.04" y2="455.93" style="fill: none; stroke: #20365d; stroke-miterlimit: 10; stroke-width: 2px;"/>
+      <polygon points="16.06 382.9 21.04 374.27 26.03 382.9 16.06 382.9" style="fill: #20365d;"/>
+      <polygon points="16.06 454.47 21.04 463.11 26.03 454.47 16.06 454.47" style="fill: #20365d;"/>
+    </g>
+  </g>
+</svg>

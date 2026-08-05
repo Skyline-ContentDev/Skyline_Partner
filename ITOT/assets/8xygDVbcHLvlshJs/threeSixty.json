@@ -1,0 +1,27 @@
+{
+  "version": "3.101.34925.0",
+  "course_id": "5zc3ZYPAUTm",
+  "title": "The Purdue Model",
+  "thumbnail": "story_content/thumbnail.jpg",
+  "scenes": [
+    {
+      "title": "Intro Scene"
+    }
+  ],
+  "slides": [
+    {
+      "id": "5z3qrU23el5",
+      "title": "Intro Slide",
+      "scene_index": "1.1"
+    }
+  ],
+  "player": {
+    "name": "unified",
+    "width": 980,
+    "height": 611
+  },
+  "stage": {
+    "width": 960,
+    "height": 540
+  }
+}

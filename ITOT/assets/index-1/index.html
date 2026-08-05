@@ -1,0 +1,117 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8">
+<style id="mighty-reset-css">/* Basic reset - lowest priority */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; font-family: sans-serif; line-height: 1.5; }</style><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How This Works With ISE</title>
+<style>
+  :root{
+    /* EDGE colors */
+    --cyan:#16bdeb;
+    --navy:#20365d;
+    --navy-dark:#000824;
+    /* Grays and chartreuse */
+    --gray:#63666a;
+    --gray-light:#d9d8d7;
+
+    --text:var(--navy-dark);
+    --muted:var(--gray);
+    --line:rgba(32,54,93,.14);
+    --accent-soft:rgba(22,189,235,.18);
+    --font:inherit, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiased;background:#fff}
+
+  .wrap{position:relative;max-width:640px;margin:0 auto;padding:8px}
+
+
+  .card{position:relative;z-index:1;background:#fff;border:1px solid var(--line);border-radius:16px;
+    padding:26px 28px}
+
+  .question{font-size:20px;font-weight:700;color:var(--text);margin-bottom:16px;line-height:1.3}
+
+  .toggle{position:relative;display:flex;background:rgba(32,54,93,.06);border-radius:13px;padding:4px;margin-bottom:20px}
+  .toggle-thumb{position:absolute;top:4px;left:4px;width:calc(50% - 4px);height:calc(100% - 8px);
+    background:var(--cyan);border-radius:10px;transition:transform .35s cubic-bezier(.2,.7,.2,1);
+    box-shadow:0 6px 16px -4px rgba(22,189,235,.55)}
+  .toggle-btn{position:relative;z-index:1;flex:1;background:none;border:none;padding:12px 10px;
+    font-family:var(--font);font-weight:700;font-size:13.5px;color:var(--navy);cursor:pointer;
+    border-radius:10px;transition:color .35s;display:flex;align-items:center;justify-content:center}
+  .toggle-btn.active{color:#fff}
+  .toggle-btn:focus-visible{outline:2px solid var(--navy);outline-offset:3px}
+
+  .panel{border:1px solid var(--line);border-radius:12px;padding:18px 20px;background:rgba(32,54,93,.025);
+    transition:opacity .25s ease}
+  .panel.fading{opacity:0}
+  .panel p{font-size:16px;line-height:1.6;color:var(--text)}
+
+  @media(max-width:480px){
+    .card{padding:20px 18px}
+    .toggle-btn{font-size:12.5px;padding:11px 6px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .toggle-thumb{transition:none}
+    .panel{transition:none}
+  }
+</style>
+<script id="mighty-interactive-sdk" src="../../mighty/sdk/v1/mighty-interactive-sdk.min.js"></script></head>
+<body>
+<div class="wrap">
+  <div class="glow"></div>
+  <div class="card">
+    <div class="question">Does the customer use Cisco ISE?</div>
+    <div class="toggle" id="toggle">
+      <div class="toggle-thumb" id="thumb"></div>
+      <button class="toggle-btn active" id="btnYes" type="button">Yes, they use ISE</button>
+      <button class="toggle-btn" id="btnNo" type="button">No, they don't</button>
+    </div>
+
+    <div class="panel" id="panel">
+      <p>Lead with addition, not replacement. Cyber Vision’s new native network segmentation complements Cisco ISE and 
+        Cisco Secure Firewall rather than replacing them. Customers can use Cyber Vision’s segmentation capability for east-west segmentation within the OT network. 
+        ISE keeps handling identity-based policies, and Secure Firewall keeps covering the boundary between IT and OT. 
+       This protects what the customer already 
+        invested in while growing the footprint and capabilities.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATES = {
+  yes: {
+    text: "Lead with addition, not replacement. Cyber Vision's new native network segmentation complements Cisco ISE and Cisco Secure Firewall rather than replacing them. Customers can use Cyber Vision's segmentation capability for east-west segmentation within the OT network. ISE keeps handling identity-based policies, and Secure Firewall keeps covering the boundary between IT and OT. This protects what the customer already invested in while growing the footprint and capabilities."
+  },
+  no: {
+    text: "Cyber Vision doesn't need ISE to enforce segmentation. It can push policies straight to industrial switches itself, no separate appliance required. That's a simpler, self-contained security story for a customer who hasn't adopted ISE or doesn't want to extend it into OT, and it still leaves the door open to grow the account later."
+  }
+};
+
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const thumb = document.getElementById("thumb");
+const btnYes = document.getElementById("btnYes"), btnNo = document.getElementById("btnNo");
+const panel = document.getElementById("panel");
+let current = "yes";
+
+function renderPanel(key) {
+  panel.innerHTML = `<p>${STATES[key].text}</p>`;
+}
+
+function setState(key) {
+  if (key === current) return;
+  current = key;
+  btnYes.classList.toggle("active", key === "yes");
+  btnNo.classList.toggle("active", key === "no");
+  thumb.style.transform = key === "yes" ? "translateX(0)" : "translateX(100%)";
+
+  if (reduce) { renderPanel(key); return; }
+  panel.classList.add("fading");
+  setTimeout(() => { renderPanel(key); panel.classList.remove("fading"); }, 180);
+}
+
+btnYes.addEventListener("click", () => setState("yes"));
+btnNo.addEventListener("click", () => setState("no"));
+</script>
+
+
+<link rel="stylesheet" href="../../mighty/mighty-additional-fonts.css"><link rel="stylesheet" href="../../mighty/mighty-global-styles.css"><link rel="stylesheet" href="../../mighty/mighty-interactive-body-font.css"></body></html>

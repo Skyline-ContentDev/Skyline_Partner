@@ -1,0 +1,62 @@
+{
+  "version": "3.101.34925.0",
+  "course_id": "66SVnacopE8",
+  "title": "Splunk Orientation",
+  "thumbnail": "story_content/thumbnail.jpg",
+  "scenes": [
+    {
+      "title": "Intro Scene"
+    }
+  ],
+  "slides": [
+    {
+      "id": "67rpE3mGGnb",
+      "title": "Intro Slide",
+      "scene_index": "1.1"
+    },
+    {
+      "id": "6LspRANDr23",
+      "title": "Intro Slide",
+      "scene_index": "1.2"
+    },
+    {
+      "id": "5YLMmR4Tu36",
+      "title": "Intro Slide",
+      "scene_index": "1.3"
+    },
+    {
+      "id": "63reZHSuKUk",
+      "title": "Intro Slide",
+      "scene_index": "1.4"
+    },
+    {
+      "id": "6bneOo0N3W4",
+      "title": "Intro Slide",
+      "scene_index": "1.5"
+    },
+    {
+      "id": "6QYT3W10ZAO",
+      "title": "Intro Slide",
+      "scene_index": "1.6"
+    },
+    {
+      "id": "5nUNRUmHZn7",
+      "title": "Intro Slide",
+      "scene_index": "1.7"
+    },
+    {
+      "id": "5gI1PqDNWLr",
+      "title": "Intro Slide",
+      "scene_index": "1.8"
+    }
+  ],
+  "player": {
+    "name": "unified",
+    "width": 974,
+    "height": 531
+  },
+  "stage": {
+    "width": 954,
+    "height": 460
+  }
+}

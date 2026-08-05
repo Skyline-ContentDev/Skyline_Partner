@@ -1,0 +1,197 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8"><style id="mighty-reset-css">/* Basic reset - lowest priority */
+* { box-sizing: border-box; }
+body { margin: 0; padding: 0; font-family: sans-serif; line-height: 1.5; }</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: transparent;
+  font-family: Arial, sans-serif;
+}
+
+.sp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 20px;
+  background: var(--sp-bg);
+}
+
+.sp-card {
+  background: var(--sp-card);
+  border-radius: 10px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+}
+
+.sp-icon { flex-shrink: 0; color: var(--sp-icon); }
+
+.sp-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sp-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--sp-title);
+  line-height: 1.3;
+}
+
+.sp-desc {
+  font-size: 15px;
+  color: var(--sp-body);
+  line-height: 1.5;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.sp-card:hover .sp-desc { opacity: 1; }
+.sp-card.locked .sp-desc { opacity: 1; }
+</style>
+<script id="mighty-interactive-sdk" src="../../../../mighty/sdk/v1/mighty-interactive-sdk.min.js"></script></head>
+<body>
+
+<div class="sp-grid" id="sp-grid"></div>
+
+<script>
+const ICONS = {
+  'wrench': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 24l10-10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+    <path d="M22 4a6 6 0 0 0-6 6c0 1 .25 1.93.68 2.75L5 24.57 7.43 27l11.82-11.68A6 6 0 1 0 22 4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"></path>
+    <circle cx="22" cy="10" r="2" fill="currentColor" fill-opacity="0.25" stroke="currentColor" stroke-width="1.2"></circle>
+  </svg>`,
+  'magnifying-glass': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="13" cy="13" r="8" stroke="currentColor" stroke-width="1.8"></circle>
+    <line x1="19" y1="19" x2="27" y2="27" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></line>
+  </svg>`,
+  'people': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="10" r="4" stroke="currentColor" stroke-width="1.8"></circle>
+    <path d="M4 26c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+    <circle cx="22" cy="10" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+    <path d="M22 18c2.5 0 6 1.8 6 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+  </svg>`,
+  'clock': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="16" cy="16" r="11" stroke="currentColor" stroke-width="1.8"></circle>
+    <polyline points="16,9 16,16 21,16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline>
+  </svg>`,
+  'shield': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 4L6 8v8c0 5.5 4.3 10.7 10 12 5.7-1.3 10-6.5 10-12V8L16 4z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"></path>
+    <polyline points="12,16 15,19 21,13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline>
+  </svg>`,
+  'chart': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="5" y="18" width="5" height="9" stroke="currentColor" stroke-width="1.8" rx="1"></rect>
+    <rect x="13.5" y="12" width="5" height="15" stroke="currentColor" stroke-width="1.8" rx="1"></rect>
+    <rect x="22" y="6" width="5" height="21" stroke="currentColor" stroke-width="1.8" rx="1"></rect>
+  </svg>`,
+  'gear': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M25.96 12.37 L28.91 13.26 L28.91 18.74 L25.96 19.63 L25.61 20.48 L27.07 23.19 L23.19 27.07 L20.48 25.61 L19.63 25.96 L18.74 28.91 L13.26 28.91 L12.37 25.96 L11.52 25.61 L8.81 27.07 L4.93 23.19 L6.39 20.48 L6.04 19.63 L3.09 18.74 L3.09 13.26 L6.04 12.37 L6.39 11.52 L4.93 8.81 L8.81 4.93 L11.52 6.39 L12.37 6.04 L13.26 3.09 L18.74 3.09 L19.63 6.04 L20.48 6.39 L23.19 4.93 L27.07 8.81 L25.61 11.52 Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+    <circle cx="16" cy="16" r="4" stroke="currentColor" stroke-width="1.8"></circle>
+  </svg>`,
+  'network': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="16" cy="16" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+    <circle cx="6" cy="8" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+    <circle cx="26" cy="8" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+    <circle cx="6" cy="26" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+    <circle cx="26" cy="26" r="3" stroke="currentColor" stroke-width="1.8"></circle>
+    <line x1="8.5" y1="9.5" x2="13.5" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></line>
+    <line x1="23.5" y1="9.5" x2="18.5" y2="14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></line>
+    <line x1="8.5" y1="24.5" x2="13.5" y2="18.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></line>
+    <line x1="23.5" y1="24.5" x2="18.5" y2="18.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></line>
+  </svg>`,
+  'refresh': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 16a10 10 0 0 1 17-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+    <polyline points="23,3 23,9 17,9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline>
+    <path d="M26 16a10 10 0 0 1-17 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+    <polyline points="9,29 9,23 15,23" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline>
+  </svg>`,
+  'heartbeat': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 27C16 27 4 19.5 4 11.5A5.5 5.5 0 0 1 16 9 5.5 5.5 0 0 1 28 11.5C28 19.5 16 27 16 27Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+    <polyline points="9,15 13,15 15,11 18,19 20,15 23,15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></polyline>
+  </svg>`,
+  'eye': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 16s5-8 13-8 13 8 13 8-5 8-13 8S3 16 3 16z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+    <circle cx="16" cy="16" r="3.5" stroke="currentColor" stroke-width="1.8"></circle>
+  </svg>`,
+  'chat': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M8 7 H26 a2 2 0 0 1 2 2 V20 a2 2 0 0 1 -2 2 H14 l-5 5 v-5 H8 a2 2 0 0 1 -2 -2 V9 a2 2 0 0 1 2 -2 Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+    <circle cx="12" cy="14.5" r="1.3" fill="currentColor"></circle>
+    <circle cx="17" cy="14.5" r="1.3" fill="currentColor"></circle>
+    <circle cx="22" cy="14.5" r="1.3" fill="currentColor"></circle>
+  </svg>`,
+  'monitor': `<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="4" y="6" width="24" height="16" rx="2" stroke="currentColor" stroke-width="1.8"></rect>
+    <line x1="16" y1="22" x2="16" y2="26" stroke="currentColor" stroke-width="1.8"></line>
+    <line x1="12" y1="26" x2="20" y2="26" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></line>
+  </svg>`
+};
+
+function buildCard(title, desc, iconKey) {
+  const icon = ICONS[iconKey] || ICONS['wrench'];
+  const card = document.createElement('div');
+  card.className = 'sp-card';
+  card.innerHTML = `
+    <div class="sp-icon">${icon}</div>
+    <div class="sp-text">
+      <p class="sp-title">${title}</p>
+      <p class="sp-desc">${desc}</p>
+    </div>
+  `;
+  card.addEventListener('click', () => card.classList.toggle('locked'));
+  return card;
+}
+
+function renderCards(state) {
+  const grid = document.getElementById('sp-grid');
+  grid.style.setProperty('--sp-bg', state.bgColor || 'transparent');
+  grid.style.setProperty('--sp-card', state.cardColor || '#f0f0f0');
+  grid.style.setProperty('--sp-icon', state.iconColor || '#16bdeb');
+  grid.style.setProperty('--sp-title', state.titleColor || '#20365d');
+  grid.style.setProperty('--sp-body', state.bodyColor || '#222222');
+  grid.innerHTML = '';
+  const cards = [
+    { title: state.card1Title, desc: state.card1Desc, icon: state.card1Icon },
+    { title: state.card2Title, desc: state.card2Desc, icon: state.card2Icon },
+    { title: state.card3Title, desc: state.card3Desc, icon: state.card3Icon },
+    { title: state.card4Title, desc: state.card4Desc, icon: state.card4Icon }
+  ];
+  cards.forEach(c => grid.appendChild(buildCard(c.title, c.desc, c.icon)));
+}
+
+const sdk = window.mightyInteractiveSdk;
+sdk.onSdkReady(async () => {
+  const state = await sdk.state.getState({
+    bgColor: '#ffffff',
+    cardColor: '#f0f0f0',
+    iconColor: '#16bdeb',
+    titleColor: '#20365d',
+    bodyColor: '#222222',
+    card1Icon: 'wrench',
+    card1Title: 'Resolve Common Issues',
+    card1Desc: 'Fix problems like PLC-to-historian connectivity, HMI name resolution, and workstation access issues.',
+    card2Icon: 'magnifying-glass',
+    card2Title: 'Identify Root Causes',
+    card2Desc: 'Determine if problems are caused by addressing, name resolution, routing, switching, or connectivity.',
+    card3Icon: 'people',
+    card3Title: 'Improve Collaboration',
+    card3Desc: 'Work more effectively with IT support teams using shared terminology and methodologies.',
+    card4Icon: 'clock',
+    card4Title: 'Reduce Downtime',
+    card4Desc: 'A structured approach reduces guesswork and shortens troubleshooting time.'
+  });
+  renderCards(state);
+});
+</script>
+
+
+
+
+<link rel="stylesheet" href="../../../../mighty/mighty-additional-fonts.css"><link rel="stylesheet" href="../../../../mighty/mighty-global-styles.css"><link rel="stylesheet" href="../../../../mighty/mighty-interactive-body-font.css"></body></html>
