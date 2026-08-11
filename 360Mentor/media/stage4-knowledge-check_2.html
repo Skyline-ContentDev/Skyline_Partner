@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Stage 4: Scaling What Works — Knowledge Check</title>
+<style>
+  :root{
+    --white:#FFFFFF;
+    --midnight:#07182D;
+    --cisco-blue:#02C8FF;
+    --medium-blue:#0A60FF;
+    --magenta:#FF007F;
+    --orange:#FF9000;
+    --light-grey:#D6D6D6;
+    --medium-grey:#6B6B6B;
+    --green:#45991F;
+    --red:#EB4651;
+  }
+  *{box-sizing:border-box;}
+  html, body{
+    margin:0;
+    background:var(--light-grey);
+    font-family:"Segoe UI", Arial, sans-serif;
+    color:var(--midnight);
+  }
+  .frame{
+    background:var(--white);
+    border-radius:32px;
+    border:1.25pt solid rgba(255,144,0,0.45);
+    box-shadow:0 8px 30px rgba(7,24,45,0.08);
+    padding:40px 20px;
+    margin:20px;
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+  }
+  .eyebrow{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:var(--cisco-blue);
+    font-size:13px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    font-weight:700;
+    margin-bottom:8px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:26px;
+    height:1.25pt;
+    background:var(--cisco-blue);
+    display:inline-block;
+  }
+  h1{
+    font-size:30px;
+    line-height:1.15;
+    margin:0 0 6px;
+    font-weight:800;
+  }
+  h1 span{color:var(--cisco-blue);}
+  .sub{
+    color:var(--medium-grey);
+    font-size:15px;
+    margin:0 0 28px;
+    max-width:560px;
+  }
+  .progress-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  .progress-label{
+    font-size:12px;
+    color:var(--medium-grey);
+    letter-spacing:.05em;
+    text-transform:uppercase;
+  }
+  .progress-track{
+    flex:1;
+    height:4px;
+    background:rgba(7,24,45,0.08);
+    border-radius:4px;
+    margin:0 16px;
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,var(--medium-blue),var(--magenta),var(--orange));
+    transition:width .4s ease;
+  }
+  .score-pill{
+    font-size:12px;
+    color:var(--midnight);
+    background:var(--light-grey);
+    padding:4px 10px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+  .card{
+    background:var(--white);
+    border:1.25pt solid rgba(7,24,45,0.14);
+    box-shadow:0 2px 14px rgba(7,24,45,0.06);
+    border-radius:14px;
+    padding:28px;
+    margin-bottom:18px;
+    display:none;
+  }
+  .card.active{display:block;}
+  .qnum{
+    display:inline-block;
+    font-size:12px;
+    font-weight:700;
+    color:var(--midnight);
+    background:var(--cisco-blue);
+    border-radius:20px;
+    padding:3px 12px;
+    margin-bottom:14px;
+  }
+  .question{
+    font-size:19px;
+    font-weight:700;
+    line-height:1.4;
+    margin:0 0 20px;
+  }
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .option{
+    text-align:left;
+    background:rgba(7,24,45,0.02);
+    border:1.25pt solid rgba(7,24,45,0.18);
+    color:var(--midnight);
+    border-radius:10px;
+    padding:14px 16px;
+    font-size:15px;
+    cursor:pointer;
+    transition:border-color .15s, background .15s, transform .1s;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .option:hover:not(.locked){
+    border-color:var(--cisco-blue);
+    background:rgba(2,200,255,0.08);
+  }
+  .option .marker{
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    border:1.25pt solid var(--light-grey);
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:700;
+  }
+  .option.correct{
+    border-color:var(--green);
+    background:rgba(69,153,31,0.14);
+  }
+  .option.correct .marker{
+    background:var(--green);
+    border-color:var(--green);
+    color:var(--white);
+  }
+  .option.incorrect{
+    border-color:var(--red);
+    background:rgba(235,70,81,0.12);
+  }
+  .option.incorrect .marker{
+    background:var(--red);
+    border-color:var(--red);
+    color:var(--white);
+  }
+  .feedback{
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:10px;
+    font-size:14px;
+    line-height:1.5;
+    display:none;
+  }
+  .feedback.show{display:block;}
+  .feedback.right{
+    background:rgba(69,153,31,0.12);
+    border:1.25pt solid var(--green);
+  }
+  .feedback.wrong{
+    background:rgba(235,70,81,0.10);
+    border:1.25pt solid var(--red);
+  }
+  .feedback b{color:var(--cisco-blue);}
+  .nav-row{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:22px;
+  }
+  .next-btn{
+    background:var(--medium-blue);
+    color:var(--white);
+    border:none;
+    border-radius:8px;
+    padding:11px 24px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s, background .15s;
+  }
+  .next-btn.ready{
+    opacity:1;
+    pointer-events:auto;
+  }
+  .next-btn:hover{background:var(--cisco-blue); color:var(--midnight);}
+
+  /* results */
+  .results{
+    display:none;
+    text-align:center;
+    padding:44px 28px;
+    border-radius:14px;
+    border:1.25pt solid rgba(7,24,45,0.14);
+    background:var(--white);
+    box-shadow:0 2px 14px rgba(7,24,45,0.06);
+  }
+  .results.active{display:block;}
+  .results .big{
+    font-size:52px;
+    font-weight:800;
+    background:linear-gradient(90deg,var(--medium-blue),var(--magenta),var(--orange));
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+    margin-bottom:4px;
+  }
+  .results p{color:var(--medium-grey); font-size:15px; max-width:480px; margin:10px auto 26px;}
+  .retry-btn{
+    background:transparent;
+    border:1.25pt solid var(--cisco-blue);
+    color:var(--cisco-blue);
+    border-radius:8px;
+    padding:11px 24px;
+    font-size:14px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .retry-btn:hover{background:var(--cisco-blue); color:var(--midnight);}
+</style>
+</head>
+<body>
+<div class="frame">
+<div class="wrap">
+
+  <div class="eyebrow">Stage 4 · Growth</div>
+  <h1>Scaling What Works: <span>Knowledge Check</span></h1>
+  <p class="sub">Test your understanding of the three disciplines that turn the Cisco 360 Mentor Partnership into a repeatable growth engine.</p>
+
+  <div class="progress-row">
+    <span class="progress-label">Question <span id="qCurrent">1</span> of <span id="qTotal">5</span></span>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="score-pill">Score: <span id="scoreVal">0</span>/5</span>
+  </div>
+
+  <div id="cards"></div>
+
+  <div class="results" id="results">
+    <div class="big" id="resultScore">0/5</div>
+    <div id="resultMsg" style="font-size:18px; font-weight:700;"></div>
+    <p id="resultDetail"></p>
+    <button class="retry-btn" onclick="restartQuiz()">Retake the check</button>
+  </div>
+
+</div>
+</div>
+
+<script>
+const questions = [
+  {
+    q: "At Stage 4, how should the Mentor Partnership feel to the organization?",
+    options: [
+      "Like a pilot program still proving its value",
+      "Like infrastructure — embedded in account strategy and forecasts",
+      "Like a marketing campaign run once a year",
+      "Like an optional add-on for high-performing sellers"
+    ],
+    correct: 1,
+    feedback: "By Stage 4, the partnership should no longer feel like an initiative — it should feel like infrastructure, embedded in account strategy, forecast discussions, and executive conversations."
+  },
+  {
+    q: "Which discipline ensures joint opportunities are visible, forecasted, and reviewed alongside core pipeline?",
+    options: [
+      "Expansion Discipline",
+      "Leadership Discipline",
+      "Revenue Discipline",
+      "Governance Discipline"
+    ],
+    correct: 2,
+    feedback: "Revenue Discipline ties ecosystem collaboration directly to measurable business outcomes by tracking influenced bookings consistently alongside core pipeline."
+  },
+  {
+    q: "Expansion Discipline is best described as:",
+    options: [
+      "Cutting underperforming partnerships to reduce risk",
+      "Turning a successful collaboration in one segment into a blueprint for new verticals, geographies, and markets like OT and Managed Services",
+      "Increasing headcount on the partnership team",
+      "Limiting the partnership to a single region for control"
+    ],
+    correct: 1,
+    feedback: "Growth is driven by identifying repeatable plays and intentionally broadening participation across accounts, regions, and seller teams — using one win as a blueprint for the next."
+  },
+  {
+    q: "Under Leadership Discipline, sustained executive sponsorship shows up in all of the following EXCEPT:",
+    options: [
+      "Quarterly business reviews",
+      "Annual planning discussions",
+      "ESG reporting",
+      "One-time kickoff meeting with no further involvement"
+    ],
+    correct: 3,
+    feedback: "Executive sponsors stay actively engaged over time — visibility in quarterly reviews, annual planning, and ESG reporting signals sustained commitment, not a one-time kickoff."
+  },
+  {
+    q: "What happens when Revenue, Expansion, and Leadership Discipline operate together?",
+    options: [
+      "The partnership becomes harder to manage",
+      "Ecosystem collaboration becomes scalable, predictable, and strategically embedded",
+      "The program reverts to a compliance checklist",
+      "Reporting requirements are eliminated"
+    ],
+    correct: 1,
+    feedback: "When these three disciplines operate together, ecosystem collaboration becomes scalable, predictable, and strategically embedded — a true growth engine."
+  }
+];
+
+let current = 0;
+let score = 0;
+let answered = new Array(questions.length).fill(false);
+
+const cardsEl = document.getElementById('cards');
+const progressFill = document.getElementById('progressFill');
+const qCurrentEl = document.getElementById('qCurrent');
+const scoreValEl = document.getElementById('scoreVal');
+const resultsEl = document.getElementById('results');
+
+function buildCards(){
+  cardsEl.innerHTML = '';
+  questions.forEach((item, qi) => {
+    const card = document.createElement('div');
+    card.className = 'card' + (qi === 0 ? ' active' : '');
+    card.id = 'card-' + qi;
+
+    const numTag = document.createElement('div');
+    numTag.className = 'qnum';
+    numTag.textContent = 'Q' + (qi+1);
+    card.appendChild(numTag);
+
+    const qEl = document.createElement('div');
+    qEl.className = 'question';
+    qEl.textContent = item.q;
+    card.appendChild(qEl);
+
+    const optsEl = document.createElement('div');
+    optsEl.className = 'options';
+
+    item.options.forEach((opt, oi) => {
+      const btn = document.createElement('button');
+      btn.className = 'option';
+      btn.innerHTML = '<span class="marker">' + String.fromCharCode(65+oi) + '</span><span>' + opt + '</span>';
+      btn.addEventListener('click', () => selectOption(qi, oi, btn));
+      optsEl.appendChild(btn);
+    });
+    card.appendChild(optsEl);
+
+    const fb = document.createElement('div');
+    fb.className = 'feedback';
+    fb.id = 'feedback-' + qi;
+    card.appendChild(fb);
+
+    const navRow = document.createElement('div');
+    navRow.className = 'nav-row';
+    const nextBtn = document.createElement('button');
+    nextBtn.className = 'next-btn';
+    nextBtn.id = 'next-' + qi;
+    nextBtn.textContent = qi === questions.length - 1 ? 'See results' : 'Next question';
+    nextBtn.addEventListener('click', () => goNext(qi));
+    navRow.appendChild(nextBtn);
+    card.appendChild(navRow);
+
+    cardsEl.appendChild(card);
+  });
+}
+
+function selectOption(qi, oi, btn){
+  if(answered[qi]) return;
+  answered[qi] = true;
+
+  const card = document.getElementById('card-' + qi);
+  const opts = card.querySelectorAll('.option');
+  const item = questions[qi];
+
+  opts.forEach((o, idx) => {
+    o.classList.add('locked');
+    if(idx === item.correct) o.classList.add('correct');
+    if(idx === oi && oi !== item.correct) o.classList.add('incorrect');
+  });
+
+  const isCorrect = (oi === item.correct);
+  if(isCorrect) score++;
+  scoreValEl.textContent = score;
+
+  const fb = document.getElementById('feedback-' + qi);
+  fb.classList.add('show', isCorrect ? 'right' : 'wrong');
+  fb.innerHTML = (isCorrect ? '<b>Correct.</b> ' : '<b>Not quite.</b> ') + item.feedback;
+
+  document.getElementById('next-' + qi).classList.add('ready');
+}
+
+function goNext(qi){
+  if(qi < questions.length - 1){
+    document.getElementById('card-' + qi).classList.remove('active');
+    current = qi + 1;
+    document.getElementById('card-' + current).classList.add('active');
+    qCurrentEl.textContent = current + 1;
+    updateProgress();
+  } else {
+    document.getElementById('card-' + qi).classList.remove('active');
+    showResults();
+  }
+}
+
+function updateProgress(){
+  const pct = (current) / questions.length * 100;
+  progressFill.style.width = pct + '%';
+}
+
+function showResults(){
+  resultsEl.classList.add('active');
+  document.getElementById('resultScore').textContent = score + '/' + questions.length;
+  progressFill.style.width = '100%';
+
+  let msg, detail;
+  if(score === questions.length){
+    msg = "Growth-engine ready.";
+    detail = "You've got Stage 4 down cold — Revenue, Expansion, and Leadership Discipline, and how they work together to make the Mentor Partnership scalable and predictable.";
+  } else if (score >= questions.length - 1){
+    msg = "Almost there.";
+    detail = "Strong grasp of Stage 4. Review the discipline you missed, then you're ready to talk it through with your team.";
+  } else {
+    msg = "Worth a second pass.";
+    detail = "Revisit the three disciplines — Revenue, Expansion, and Leadership — on the 'Scaling What Works' page before moving on.";
+  }
+  document.getElementById('resultMsg').textContent = msg;
+  document.getElementById('resultDetail').textContent = detail;
+}
+
+function restartQuiz(){
+  current = 0;
+  score = 0;
+  answered = new Array(questions.length).fill(false);
+  scoreValEl.textContent = 0;
+  qCurrentEl.textContent = 1;
+  progressFill.style.width = '0%';
+  resultsEl.classList.remove('active');
+  buildCards();
+}
+
+buildCards();
+</script>
+</body>
+</html>

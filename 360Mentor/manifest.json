@@ -1,0 +1,54 @@
+{
+  "title": "C360 Mentor Partnership Playbook for Practice Leaders",
+  "source_pdf": "C360_v9.pdf",
+  "design": {
+    "primary_color": "#07182d",
+    "accent_color": "#02c8ff",
+    "background_color": "#e0e2e3",
+    "logo": "assets/CiscoLogo_DarkBlue.png",
+    "logo_link": "www.cisco.com"
+  },
+  "bookmarks": [
+    {
+      "title": "Mentor Partnership Overview",
+      "page": 2,
+      "background": "#ffffff",
+      "text_color": "#07182d"
+    },
+    {
+      "title": "Stage 1",
+      "page": 4,
+      "background": "#07182d",
+      "text_color": "#ffffff"
+    },
+    {
+      "title": "Stage 2",
+      "page": 6,
+      "background": "#ffffff",
+      "text_color": "#07182d"
+    },
+    {
+      "title": "Stage 3",
+      "page": 12,
+      "background": "#07182d",
+      "text_color": "#ffffff"
+    },
+    {
+      "title": "Stage 4",
+      "page": 16,
+      "background": "#ffffff",
+      "text_color": "#07182d"
+    },
+    {
+      "title": "Closing and Knowledge Check",
+      "page": 20,
+      "background": "#07182d",
+      "text_color": "#ffffff"
+    }
+  ],
+  "hotspot_config": {
+    "popup/story.html": {
+      "size": "small"
+    }
+  }
+}

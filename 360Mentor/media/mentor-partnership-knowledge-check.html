@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Check — Cisco 360 Mentor Partnership Playbook</title>
+<style>
+  :root{
+    --bg-top:#0c1c30;
+    --bg-bottom:#0a1526;
+    --blue:#02C8FF;
+    --pink:#FF007F;
+    --orange:#FF9000;
+    --card-bg:#0f2138;
+    --text-dim:#a9bcd0;
+    --correct:#2ecc71;
+    --incorrect:#ff4d5e;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    padding:40px 20px 80px;
+    background:linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+    font-family:"CiscoSans", "Cisco Sans", "Segoe UI", Arial, sans-serif;
+    color:#fff;
+    min-height:100vh;
+  }
+  .wrap{max-width:760px;margin:0 auto;}
+
+  .title-block{text-align:center;margin-bottom:28px;}
+  h1{
+    font-size:24px;
+    font-weight:700;
+    margin:0 0 6px;
+  }
+  .title-block p{
+    color:var(--text-dim);
+    font-size:14px;
+    margin:0;
+  }
+
+  .arc-rule{
+    height:4px;
+    width:100%;
+    border-radius:4px;
+    margin:18px 0 30px;
+    background:linear-gradient(90deg, var(--blue), var(--pink), var(--orange));
+  }
+
+  .progress-track{
+    height:8px;
+    border-radius:6px;
+    background:rgba(255,255,255,0.08);
+    overflow:hidden;
+    margin-bottom:10px;
+  }
+  .progress-fill{
+    height:100%;
+    border-radius:6px;
+    background:linear-gradient(90deg, var(--blue), var(--pink), var(--orange));
+    width:0%;
+    transition:width .35s ease;
+  }
+  .progress-label{
+    display:flex;
+    justify-content:space-between;
+    font-size:12.5px;
+    color:var(--text-dim);
+    margin-bottom:26px;
+  }
+
+  .card{
+    background:var(--card-bg);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:12px;
+    padding:26px 26px 22px;
+    box-shadow:0 8px 30px rgba(0,0,0,0.35);
+  }
+
+  .q-tag{
+    display:inline-block;
+    font-size:11.5px;
+    font-weight:700;
+    letter-spacing:.6px;
+    text-transform:uppercase;
+    color:var(--blue);
+    background:rgba(2,200,255,0.12);
+    border:1px solid rgba(2,200,255,0.35);
+    border-radius:20px;
+    padding:4px 12px;
+    margin-bottom:14px;
+  }
+
+  .q-text{
+    font-size:18px;
+    font-weight:600;
+    line-height:1.4;
+    margin:0 0 20px;
+  }
+
+  .options{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .option{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:13px 16px;
+    border-radius:9px;
+    border:1.5px solid rgba(255,255,255,0.14);
+    background:rgba(255,255,255,0.02);
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .option:hover{border-color:var(--blue); background:rgba(2,200,255,0.06);}
+  .option.selected{border-color:var(--blue); background:rgba(2,200,255,0.12);}
+  .option.correct{border-color:var(--correct); background:rgba(46,204,113,0.12);}
+  .option.incorrect{border-color:var(--incorrect); background:rgba(255,77,94,0.12);}
+  .option.disabled{cursor:default;}
+
+  .bullet{
+    flex-shrink:0;
+    width:20px;
+    height:20px;
+    border-radius:50%;
+    border:1.5px solid rgba(255,255,255,0.35);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:12px;
+    font-weight:700;
+    color:var(--text-dim);
+    margin-top:1px;
+  }
+  .option.selected .bullet{border-color:var(--blue); color:var(--blue);}
+  .option.correct .bullet{border-color:var(--correct); color:var(--correct);}
+  .option.incorrect .bullet{border-color:var(--incorrect); color:var(--incorrect);}
+
+  .option-text{font-size:15px; line-height:1.45; color:#e7edf4;}
+
+  .feedback{
+    margin-top:18px;
+    padding:14px 16px;
+    border-radius:9px;
+    font-size:14.5px;
+    line-height:1.5;
+    display:none;
+  }
+  .feedback.show{display:block;}
+  .feedback.correct-fb{background:rgba(46,204,113,0.12); border:1px solid rgba(46,204,113,0.4); color:#c7f7dc;}
+  .feedback.incorrect-fb{background:rgba(255,77,94,0.12); border:1px solid rgba(255,77,94,0.4); color:#ffd6da;}
+  .feedback b{color:#fff;}
+
+  .actions{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:22px;
+  }
+  button.nav-btn{
+    background:linear-gradient(90deg, var(--blue), #0a8fc2);
+    color:#04121f;
+    border:none;
+    font-weight:700;
+    font-size:14.5px;
+    padding:11px 26px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:filter .15s ease;
+  }
+  button.nav-btn:hover{filter:brightness(1.08);}
+  button.nav-btn:disabled{
+    background:rgba(255,255,255,0.1);
+    color:rgba(255,255,255,0.35);
+    cursor:not-allowed;
+  }
+
+  /* results screen */
+  .results{display:none; text-align:center;}
+  .results.show{display:block;}
+  .score-ring{
+    width:150px;height:150px;
+    border-radius:50%;
+    margin:10px auto 20px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:conic-gradient(var(--blue) calc(var(--pct,0) * 1%), rgba(255,255,255,0.08) 0);
+    position:relative;
+  }
+  .score-ring::before{
+    content:"";
+    position:absolute;
+    width:118px;height:118px;
+    border-radius:50%;
+    background:var(--card-bg);
+  }
+  .score-ring span{
+    position:relative;
+    font-size:30px;
+    font-weight:800;
+  }
+  .results h2{
+    font-size:22px;
+    margin:0 0 8px;
+  }
+  .results p.msg{color:var(--text-dim); font-size:15px; margin:0 0 26px;}
+  .restart-btn{
+    background:transparent;
+    border:1.5px solid var(--blue);
+    color:var(--blue);
+    font-weight:700;
+    font-size:14px;
+    padding:10px 22px;
+    border-radius:8px;
+    cursor:pointer;
+  }
+  .restart-btn:hover{background:rgba(2,200,255,0.1);}
+
+  .review-list{
+    text-align:left;
+    margin-top:28px;
+    border-top:1px solid rgba(255,255,255,0.1);
+    padding-top:20px;
+  }
+  .review-item{
+    padding:12px 0;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+    font-size:14px;
+    line-height:1.5;
+  }
+  .review-item:last-child{border-bottom:none;}
+  .review-item .rq{color:var(--text-dim); font-weight:600; margin-bottom:4px;}
+  .review-item .ra{color:#e7edf4;}
+  .tick-ok{color:var(--correct); font-weight:700;}
+  .tick-bad{color:var(--incorrect); font-weight:700;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="title-block">
+    <h1>Knowledge Check</h1>
+    <p>Cisco 360 Mentor Partnership Playbook — Turning Strategy into Revenue</p>
+  </div>
+  <div class="arc-rule"></div>
+
+  <div id="quiz-screen">
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-label">
+      <span id="progressText">Question 1 of 12</span>
+      <span id="scoreText">Score: 0</span>
+    </div>
+
+    <div class="card">
+      <span class="q-tag" id="qTag">Stage 1 · Engagement and Learning</span>
+      <p class="q-text" id="qText"></p>
+      <div class="options" id="optionsList"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="actions">
+        <button class="nav-btn" id="nextBtn" disabled>Check Answer</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="results-screen" class="results">
+    <div class="score-ring" id="scoreRing" style="--pct:0"><span id="scorePct">0%</span></div>
+    <h2 id="resultsHeading">Results</h2>
+    <p class="msg" id="resultsMsg"></p>
+    <button class="restart-btn" id="restartBtn">Retake the Knowledge Check</button>
+    <div class="review-list" id="reviewList"></div>
+  </div>
+
+</div>
+
+<script>
+  const QUESTIONS = [
+    {
+      tag: "Overview",
+      q: "The Cisco 360 Mentor Partnership is designed to help Large (Mentor) Partners do what, through structured collaboration with Community Enablement (Protégé) Partners?",
+      options: [
+        "Reduce their headcount by outsourcing sales to Cisco",
+        "Accelerate growth by unlocking new market access, driving incremental bookings, and strengthening ESG performance",
+        "Replace their existing partner agreements with Cisco directly",
+        "Consolidate all resale margin under a single distributor"
+      ],
+      correct: 1,
+      explain: "The Mentor Partnership brings together scale, specialization, and responsible sourcing to unlock new market access, drive incremental bookings, and strengthen ESG performance across the ecosystem."
+    },
+    {
+      tag: "Framework",
+      q: "Which of the following is NOT one of the four stages of the Mentor Partnership framework?",
+      options: [
+        "Engagement and Learning",
+        "Strategy and Framework",
+        "Compliance Audit",
+        "Growth"
+      ],
+      correct: 2,
+      explain: "The four stages are: Stage 1 – Engagement and Learning, Stage 2 – Strategy and Framework, Stage 3 – Execution Plan, and Stage 4 – Growth. \"Compliance Audit\" isn't one of them."
+    },
+    {
+      tag: "Stage 1 · The Business Case",
+      q: "According to the playbook's business case data, diverse/strategic suppliers often deliver what combination of benefits?",
+      options: [
+        "5% lower costs and 10% faster project timelines",
+        "14% lower costs and 23% faster project timelines",
+        "50% lower costs and 76% faster project timelines",
+        "23% lower costs and 72% faster project timelines"
+      ],
+      correct: 1,
+      explain: "Data shows diverse suppliers often deliver 14% lower costs and 23% faster project timelines, on top of innovation, supply chain resilience, risk mitigation, and local market credibility."
+    },
+    {
+      tag: "Stage 1 · High-Growth Markets",
+      q: "What is the projected Total Addressable Market (TAM) for Operational Technology (OT) by 2027?",
+      options: [
+        "$100B",
+        "$250B",
+        "$600B",
+        "$1T"
+      ],
+      correct: 1,
+      explain: "Industrial IoT and OT represent a $250B TAM by 2027, and OT opportunities increasingly require regional presence, local certifications, and specialized implementation partners."
+    },
+    {
+      tag: "Stage 2 · Designing the Partnership",
+      q: "When defining your Ideal Community Enablement Partner Profile, which of these is one of the listed criteria?",
+      options: [
+        "Number of social media followers",
+        "Certifications and Designations (e.g., SBA 8(a), SDB, HUBZone, ED-WOSB)",
+        "Company's founding year",
+        "Stock ticker symbol"
+      ],
+      correct: 1,
+      explain: "Strategic alignment begins with clarity around Certifications and Designations, Technology Focus, Market Access, Geographic Presence, and Capability Maturity — not vanity metrics."
+    },
+    {
+      tag: "Stage 2 · Governance",
+      q: "Which of these is one of the four steps in \"Governance, Structure and Success Signals\"?",
+      options: [
+        "Establish the Engagement Model",
+        "Outsource all vetting to a third party",
+        "Postpone success metrics until Stage 4",
+        "Skip executive sponsorship to move faster"
+      ],
+      correct: 0,
+      explain: "The four steps are: 1) Establish the Engagement Model, 2) Vet & Select Strategically, 3) ESG & Purpose Integration, and 4) Define Success Metrics Early — defined up front, not delayed."
+    },
+    {
+      tag: "Stage 3 · Activating the Partnership",
+      q: "To \"Enable the Sales Motion\" in Stage 3, Practice Leaders should ensure all of the following EXCEPT:",
+      options: [
+        "A clear and compelling partnership value proposition",
+        "Defined roles and responsibilities across joint sales engagements",
+        "Integration into CRM and opportunity tracking systems",
+        "Sole ownership of every deal by the Community Enablement Partner"
+      ],
+      correct: 3,
+      explain: "Enabling the sales motion means clear value proposition, defined roles, aligned incentives, CRM integration, and a repeatable engagement model — not handing sole deal ownership to one side."
+    },
+    {
+      tag: "Stage 3 · Execution",
+      q: "In the Operational Integration section, what does \"P2P\" stand for in the P2P Sales Motion / P2P Framework?",
+      options: [
+        "Partner-to-Partner",
+        "Point-to-Point",
+        "Path-to-Profit",
+        "Procurement-to-Payment"
+      ],
+      correct: 0,
+      explain: "P2P refers to Partner-to-Partner — the sales motion and exception process Practice Leaders align on to reduce transaction friction and protect deal velocity."
+    },
+    {
+      tag: "Stage 4 · Scaling What Works",
+      q: "Sustained growth in Stage 4 depends on three disciplines. What are they?",
+      options: [
+        "Revenue, Expansion, and Leadership Discipline",
+        "Marketing, Sales, and Legal Discipline",
+        "Budget, Compliance, and HR Discipline",
+        "Product, Engineering, and Support Discipline"
+      ],
+      correct: 0,
+      explain: "By Stage 4, the partnership should feel like infrastructure, sustained by Revenue Discipline, Expansion Discipline, and Leadership Discipline."
+    },
+    {
+      tag: "Stage 4 · Growth Dashboard",
+      q: "On the Mentor Partnership Growth Dashboard, which question is used to assess brand and ESG positioning?",
+      options: [
+        "\"Are we Growing Revenue?\"",
+        "\"Are we Expanding Reach?\"",
+        "\"Are we Strengthening Brand and ESG Positioning?\"",
+        "\"Is the Model Sustainable?\""
+      ],
+      correct: 2,
+      explain: "The dashboard uses four lenses — Growing Revenue, Expanding Reach, Strengthening Brand and ESG Positioning, and Model Sustainability — each with its own success indicators."
+    },
+    {
+      tag: "What Cisco Expects",
+      q: "Under \"Strategic Alignment\" in what Cisco expects in return, Practice Leaders are asked to provide:",
+      options: [
+        "A signed NDA only",
+        "Written Executive commitment and designated Executive Sponsor",
+        "A dedicated call center",
+        "A public press release"
+      ],
+      correct: 1,
+      explain: "Support flows both ways: under Strategic Alignment, Cisco expects a written Executive commitment and a designated Executive Sponsor, plus alignment of partnership goals to revenue and growth objectives."
+    },
+    {
+      tag: "Closing · Key Takeaways",
+      q: "Which of these is listed as a Key Takeaway for Revenue Impact at the close of the playbook?",
+      options: [
+        "Responsible sourcing has evolved into a strategic lever that directly influences deal qualification, procurement access, and competitive positioning",
+        "Ecosystem partnerships should stay informal to preserve flexibility",
+        "ESG reporting has no bearing on deal outcomes",
+        "Revenue and ESG goals are mutually exclusive"
+      ],
+      correct: 0,
+      explain: "Responsible sourcing is now a strategic lever — directly influencing deal qualification, procurement access, and competitive positioning — not a side compliance exercise."
+    }
+  ];
+
+  let current = 0;
+  let score = 0;
+  let answered = false;
+  const userAnswers = [];
+
+  const qTag = document.getElementById('qTag');
+  const qText = document.getElementById('qText');
+  const optionsList = document.getElementById('optionsList');
+  const feedback = document.getElementById('feedback');
+  const nextBtn = document.getElementById('nextBtn');
+  const progressFill = document.getElementById('progressFill');
+  const progressText = document.getElementById('progressText');
+  const scoreText = document.getElementById('scoreText');
+  const quizScreen = document.getElementById('quiz-screen');
+  const resultsScreen = document.getElementById('results-screen');
+
+  function renderQuestion(){
+    answered = false;
+    const item = QUESTIONS[current];
+    qTag.textContent = item.tag;
+    qText.textContent = item.q;
+    optionsList.innerHTML = '';
+    feedback.className = 'feedback';
+    feedback.textContent = '';
+    nextBtn.textContent = 'Check Answer';
+    nextBtn.disabled = true;
+
+    item.options.forEach(function(optText, idx){
+      const opt = document.createElement('div');
+      opt.className = 'option';
+      opt.innerHTML = '<span class="bullet">' + String.fromCharCode(65+idx) + '</span><span class="option-text">' + optText + '</span>';
+      opt.addEventListener('click', function(){
+        if(answered) return;
+        document.querySelectorAll('.option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        opt.dataset.idx = idx;
+        nextBtn.disabled = false;
+        optionsList.dataset.selected = idx;
+      });
+      optionsList.appendChild(opt);
+    });
+
+    progressFill.style.width = ((current) / QUESTIONS.length * 100) + '%';
+    progressText.textContent = 'Question ' + (current+1) + ' of ' + QUESTIONS.length;
+    scoreText.textContent = 'Score: ' + score;
+  }
+
+  function checkAnswer(){
+    const item = QUESTIONS[current];
+    const selectedIdx = parseInt(optionsList.dataset.selected, 10);
+    const opts = document.querySelectorAll('.option');
+    opts.forEach(o => o.classList.add('disabled'));
+
+    const isCorrect = selectedIdx === item.correct;
+    if(isCorrect) score++;
+    userAnswers.push({ idx: current, selectedIdx: selectedIdx, correct: isCorrect });
+
+    opts[item.correct].classList.add('correct');
+    if(!isCorrect){
+      opts[selectedIdx].classList.add('incorrect');
+    }
+
+    feedback.classList.add('show');
+    feedback.classList.add(isCorrect ? 'correct-fb' : 'incorrect-fb');
+    feedback.innerHTML = '<b>' + (isCorrect ? 'Correct. ' : 'Not quite. ') + '</b>' + item.explain;
+
+    scoreText.textContent = 'Score: ' + score;
+    nextBtn.textContent = (current === QUESTIONS.length - 1) ? 'See Results' : 'Next Question';
+    answered = true;
+  }
+
+  function goNext(){
+    if(!answered){
+      checkAnswer();
+      return;
+    }
+    current++;
+    if(current >= QUESTIONS.length){
+      showResults();
+    } else {
+      renderQuestion();
+    }
+  }
+
+  function showResults(){
+    quizScreen.style.display = 'none';
+    resultsScreen.classList.add('show');
+    const pct = Math.round((score / QUESTIONS.length) * 100);
+    document.getElementById('scoreRing').style.setProperty('--pct', pct);
+    document.getElementById('scorePct').textContent = pct + '%';
+    document.getElementById('resultsHeading').textContent = score + ' / ' + QUESTIONS.length + ' Correct';
+
+    let msg;
+    if(pct >= 90){
+      msg = "Outstanding. You've got the Mentor Partnership framework down cold.";
+    } else if(pct >= 70){
+      msg = "Solid grasp of the framework — review the missed items below to lock it in.";
+    } else {
+      msg = "Worth another pass through the playbook — review the items below, then retake the check.";
+    }
+    document.getElementById('resultsMsg').textContent = msg;
+
+    const reviewList = document.getElementById('reviewList');
+    reviewList.innerHTML = '';
+    userAnswers.forEach(function(ans){
+      const item = QUESTIONS[ans.idx];
+      const div = document.createElement('div');
+      div.className = 'review-item';
+      div.innerHTML =
+        '<div class="rq">Q' + (ans.idx+1) + '. ' + item.q + '</div>' +
+        '<div class="ra"><span class="' + (ans.correct ? 'tick-ok' : 'tick-bad') + '">' + (ans.correct ? '✓' : '✕') + '</span>&nbsp; Correct answer: ' + item.options[item.correct] + '</div>';
+      reviewList.appendChild(div);
+    });
+
+    progressFill.style.width = '100%';
+  }
+
+  function restart(){
+    current = 0;
+    score = 0;
+    userAnswers.length = 0;
+    resultsScreen.classList.remove('show');
+    quizScreen.style.display = 'block';
+    renderQuestion();
+  }
+
+  nextBtn.addEventListener('click', goNext);
+  document.getElementById('restartBtn').addEventListener('click', restart);
+
+  renderQuestion();
+</script>
+</body>
+</html>

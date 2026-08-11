@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Here's What Cisco Expects in Return</title>
+<style>
+  :root{
+    --bg-top:#0c1c30;
+    --bg-bottom:#0a1526;
+    --blue:#02C8FF;
+    --pink:#FF007F;
+    --orange:#FF9000;
+    --card-bg:#0f2138;
+    --text-dim:#a9bcd0;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    padding:50px 20px 90px;
+    background:linear-gradient(180deg, var(--bg-top), var(--bg-bottom));
+    font-family:"CiscoSans", "Cisco Sans", "Segoe UI", Arial, sans-serif;
+    color:#fff;
+    min-height:100vh;
+  }
+  .wrap{max-width:820px;margin:0 auto;}
+  h1{
+    font-size:26px;
+    font-weight:700;
+    text-align:center;
+    margin:0 0 10px;
+    color:#fff;
+  }
+  .subtitle{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:15px;
+    margin:0 0 34px;
+    max-width:640px;
+    margin-left:auto;
+    margin-right:auto;
+  }
+  .accordion{
+    display:flex;
+    flex-direction:column;
+    gap:16px;
+  }
+  .item{
+    border-radius:10px;
+    overflow:hidden;
+    background:var(--card-bg);
+    border:1px solid rgba(255,255,255,0.08);
+    transition:box-shadow .25s ease;
+  }
+  .item[data-open="true"]{
+    box-shadow:0 6px 24px rgba(0,0,0,0.35);
+  }
+  .header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:16px 22px;
+    cursor:pointer;
+    user-select:none;
+    border-left:5px solid var(--blue);
+    background:linear-gradient(90deg, rgba(2,200,255,0.35), rgba(2,200,255,0.05));
+  }
+  .item[data-color="pink"] .header{border-left-color:var(--pink); background:linear-gradient(90deg, rgba(255,0,127,0.35), rgba(255,0,127,0.05));}
+  .item[data-color="orange"] .header{border-left-color:var(--orange); background:linear-gradient(90deg, rgba(255,144,0,0.35), rgba(255,144,0,0.05));}
+  .header:hover{filter:brightness(1.08);}
+  .header-title{
+    font-size:17px;
+    font-weight:600;
+    letter-spacing:.2px;
+  }
+  .chevron{
+    width:14px;
+    height:14px;
+    flex-shrink:0;
+    border-right:2px solid #fff;
+    border-bottom:2px solid #fff;
+    transform:rotate(45deg);
+    transition:transform .25s ease;
+    margin-right:4px;
+  }
+  .item[data-open="true"] .chevron{
+    transform:rotate(-135deg);
+  }
+  .panel{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .35s ease;
+  }
+  .panel-inner{
+    padding:6px 22px 20px 27px;
+  }
+  ul{
+    margin:0;
+    padding:0;
+    list-style:none;
+  }
+  li{
+    position:relative;
+    padding-left:16px;
+    margin-bottom:10px;
+    font-size:12pt;
+    line-height:1.5;
+    color:#e7edf4;
+  }
+  li::before{
+    content:"•";
+    position:absolute;
+    left:0;
+    color:var(--text-dim);
+  }
+  li::marker{content:none;}
+  li b{color:#fff;}
+  .hint{
+    text-align:center;
+    color:var(--text-dim);
+    font-size:13px;
+    margin-top:30px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="accordion" id="accordion">
+
+    <div class="item" data-color="blue" data-open="false">
+      <div class="header" onclick="toggleItem(this)">
+        <span class="header-title">Strategic Alignment</span>
+        <span class="chevron"></span>
+      </div>
+      <div class="panel">
+        <div class="panel-inner">
+          <ul>
+            <li>Written Executive commitment and designated Executive Sponsor</li>
+            <li>Align partnership goals to revenue and growth objectives</li>
+            <li>Incorporate partnership objectives into annual planning</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="item" data-color="pink" data-open="false">
+      <div class="header" onclick="toggleItem(this)">
+        <span class="header-title">GTM Execution</span>
+        <span class="chevron"></span>
+      </div>
+      <div class="panel">
+        <div class="panel-inner">
+          <ul>
+            <li>Growth in bookings and pipeline with P2P opportunities</li>
+            <li>Strengthen Partner-to-Partner engagements/relationships</li>
+            <li>Execute demand generation activity with strategic partners</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="item" data-color="orange" data-open="false">
+      <div class="header" onclick="toggleItem(this)">
+        <span class="header-title">Governance and Performance Support</span>
+        <span class="chevron"></span>
+      </div>
+      <div class="panel">
+        <div class="panel-inner">
+          <ul>
+            <li>Utilize framework &amp; provide feedback</li>
+            <li>Internal Opportunity tracking and performance reporting</li>
+            <li>QBRs with Cisco</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="hint">Click each category to expand.</p>
+</div>
+
+<script>
+  function toggleItem(headerEl){
+    const item = headerEl.parentElement;
+    const panel = item.querySelector('.panel');
+    const isOpen = item.getAttribute('data-open') === 'true';
+
+    document.querySelectorAll('.item').forEach(function(i){
+      i.setAttribute('data-open','false');
+      i.querySelector('.panel').style.maxHeight = null;
+    });
+
+    if(!isOpen){
+      item.setAttribute('data-open','true');
+      panel.style.maxHeight = panel.scrollHeight + 'px';
+    }
+  }
+</script>
+</body>
+</html>
